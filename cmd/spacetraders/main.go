@@ -1,21 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"github.com/codemicro/spacetraders/internal/stapi"
+	"github.com/codemicro/spacetraders/internal/control"
+	"time"
 )
 
 func main() {
-	user, err := stapi.GetUserInfo("akpa")
-	fmt.Println(err)
-	fmt.Printf("%#v\n", user)
-	fmt.Printf("%#v\n", user.Ships[0])
-	fmt.Printf("%#v %s\n", user.Loans[0], user.Loans[0].Due)
-
-	locations, err := stapi.GetSystemLocations("OE")
-	fmt.Println(err)
-	for _, x := range locations {
-		fmt.Printf("%#v\n", x)
+	err := control.Start()
+	if err != nil {
+		panic(err)
 	}
 
+	time.Sleep(5 * time.Second)
 }
