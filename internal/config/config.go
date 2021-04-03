@@ -7,6 +7,7 @@ import (
 
 type config struct {
 	Token string
+	Username string
 }
 
 var C config
