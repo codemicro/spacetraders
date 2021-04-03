@@ -1,7 +1,7 @@
 package stapi
 
 import (
-	"github.com/hashicorp/go-multierror"
+	"errors"
 )
 
 // {
@@ -20,15 +20,20 @@ type User struct {
 	Loans    []*Loan `json:"loans"`
 }
 
+var (
+	ErrorUserNotFound = errors.New("stapi: user not found")
+)
+
 func GetUserInfo(username string) (*User, error) {
 	url := URLUserInfo(username)
-	ts := struct{User User `json:"user"`}{}
+	ts := struct{User *User `json:"user"`}{}
 
-	r := request.Clone().Get(url)
+	err := orchestrateRequest(
+		request.Clone().Get(url),
+		&ts,
+		func(i int) bool { return i == 200 },
+		map[int]error{404: ErrorUserNotFound},
+	)
 
-	if _, _, errs := r.EndStruct(&ts); errs != nil {
-		return nil, multierror.Append(nil, errs...)
-	}
-
-	return &ts.User, nil
+	return ts.User, err
 }
