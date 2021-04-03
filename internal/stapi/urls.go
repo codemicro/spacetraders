@@ -8,4 +8,5 @@ const (
 
 var (
 	URLUserInfo = func (username string) string { return URLBase + "users/" + username }
+	URLSystemLocations = func (system string) string { return URLBase + "game/systems/" + system + "/locations"}
 )
