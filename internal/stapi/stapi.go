@@ -7,8 +7,10 @@ import (
 	"github.com/codemicro/spacetraders/internal/config"
 	"github.com/hashicorp/go-multierror"
 	"github.com/parnurzeal/gorequest"
+	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
@@ -18,9 +20,19 @@ const (
 	numWorkers   = 2
 )
 
-var request = gorequest.New().Timeout(10*time.Second).AppendHeader("Authorization", "Bearer "+config.C.Token)
+var request = gorequest.New().
+	Timeout(10*time.Second).
+	Set("Authorization", "Bearer "+config.C.Token).
+	SetDebug(true)
 
 func init() {
+
+	f, err := os.OpenFile("request.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	request.SetLogger(log.New(f, "", 0))
+
 	rand.Seed(time.Now().UnixNano())
 
 	for i := 0; i < numWorkers; i += 1 {
