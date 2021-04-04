@@ -29,7 +29,7 @@ func PickRoute(from *stapi.Location, options []*stapi.Location, method RoutingMe
 		}
 	}
 
-	distances := make(map[string]int64)
+	distances := make(map[string]int)
 
 	for _, routeOption := range options {
 		distances[routeOption.Symbol] = FindDistance(from, routeOption)
