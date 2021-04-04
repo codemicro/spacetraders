@@ -13,4 +13,5 @@ var (
 	URLLocationInformation = func(location string) string { return URLBase + "game/locations/" + location }
 
 	URLMarketplaceAtLocation = func(location string) string { return URLBase + "game/locations/" + location + "/marketplace" }
+	URLSubmitPurchaseOrder   = func(username string) string { return URLBase + "users/" + username + "/purchase-orders" }
 )
