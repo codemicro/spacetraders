@@ -18,9 +18,7 @@ func PickCargo(options []*stapi.MarketplaceGood) *stapi.MarketplaceGood {
 			continue
 		}
 		if strings.EqualFold(opt.Symbol, "FUEL") {
-			newOptions[i] = newOptions[len(newOptions)-1]
-			newOptions[len(newOptions)-1] = nil
-			newOptions = newOptions[:len(newOptions)-1]
+			options = append(options[:i], options[i+1:]...)
 		}
 	}
 
