@@ -43,6 +43,10 @@ func (l *LocationType) UnmarshalJSON(data []byte) error {
 		*l = LocationTypeMoon
 	case "wormhole":
 		*l = LocationTypeWormhole
+	case "gas_giant":
+		*l = LocationTypeGasGiant
+	case "asteroid":
+		*l = LocationTypeAsteroid
 	}
 	return nil
 }
@@ -52,10 +56,13 @@ const (
 	LocationTypePlanet
 	LocationTypeMoon
 	LocationTypeWormhole
+	LocationTypeAsteroid
+	LocationTypeGasGiant
 )
 
 var (
 	ErrorSystemNotFound = errors.New("stapi: system not found")
+	ErrorLocationNotFound = errors.New("stapi: location is not detectable or does not exist")
 )
 
 func GetSystemLocations(system string) ([]*Location, error) {
