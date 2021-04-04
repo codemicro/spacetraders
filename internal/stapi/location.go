@@ -61,7 +61,7 @@ const (
 )
 
 var (
-	ErrorSystemNotFound = errors.New("stapi: system not found")
+	ErrorSystemNotFound   = errors.New("stapi: system not found")
 	ErrorLocationNotFound = errors.New("stapi: location is not detectable or does not exist")
 )
 
@@ -79,4 +79,20 @@ func GetSystemLocations(system string) ([]*Location, error) {
 	)
 
 	return ts.Locations, err
+}
+
+func GetLocationInfo(location string) (*Location, error) {
+	url := URLLocationInformation(location)
+	ts := struct {
+		Location *Location `json:"location"` // This is fumbling the dockedShips parameter of the response
+	}{}
+
+	err := orchestrateRequest(
+		request.Clone().Get(url),
+		&ts,
+		func(i int) bool { return i == 200 },
+		map[int]error{404: ErrorLocationNotFound},
+	)
+
+	return ts.Location, err
 }

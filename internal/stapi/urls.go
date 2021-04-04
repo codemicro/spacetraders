@@ -7,8 +7,10 @@ const (
 )
 
 var (
-	URLUserInfo        = func(username string) string { return URLBase + "users/" + username }
-	URLSystemLocations = func(system string) string { return URLBase + "game/systems/" + system + "/locations" }
+	URLUserInfo = func(username string) string { return URLBase + "users/" + username }
 
-	URLMarketplaceAtLocation = func(location string) string { return URLBase + "game/locations/" + location + "/marketplace"}
+	URLSystemLocations     = func(system string) string { return URLBase + "game/systems/" + system + "/locations" }
+	URLLocationInformation = func(location string) string { return URLBase + "game/locations/" + location }
+
+	URLMarketplaceAtLocation = func(location string) string { return URLBase + "game/locations/" + location + "/marketplace" }
 )
