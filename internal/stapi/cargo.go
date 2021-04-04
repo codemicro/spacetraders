@@ -7,7 +7,7 @@ package stapi
 // }
 
 type Cargo struct {
-	Good string `json:"good"`
-	Quantity int `json:"quantity"`
-	TotalVolume int `json:"totalVolume"`
+	Good        string `json:"good"`
+	Quantity    int    `json:"quantity"`
+	TotalVolume int    `json:"totalVolume"`
 }

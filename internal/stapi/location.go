@@ -60,7 +60,9 @@ var (
 
 func GetSystemLocations(system string) ([]*Location, error) {
 	url := URLSystemLocations(system)
-	ts := struct{Locations []*Location `json:"locations"`}{}
+	ts := struct {
+		Locations []*Location `json:"locations"`
+	}{}
 
 	err := orchestrateRequest(
 		request.Clone().Get(url),

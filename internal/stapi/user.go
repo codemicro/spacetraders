@@ -14,9 +14,9 @@ import (
 // }
 
 type User struct {
-	Username string   `json:"username"`
-	Credits  int      `json:"credits"`
-	Ships    []*Ship  `json:"ships"`
+	Username string  `json:"username"`
+	Credits  int     `json:"credits"`
+	Ships    []*Ship `json:"ships"`
 	Loans    []*Loan `json:"loans"`
 }
 
@@ -26,7 +26,9 @@ var (
 
 func GetUserInfo(username string) (*User, error) {
 	url := URLUserInfo(username)
-	ts := struct{User *User `json:"user"`}{}
+	ts := struct {
+		User *User `json:"user"`
+	}{}
 
 	err := orchestrateRequest(
 		request.Clone().Get(url),

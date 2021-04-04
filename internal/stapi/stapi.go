@@ -15,7 +15,7 @@ import (
 
 const (
 	requestDelay = time.Second
-	numWorkers = 2
+	numWorkers   = 2
 )
 
 var request = gorequest.New().Timeout(10*time.Second).AppendHeader("Authorization", "Bearer "+config.C.Token)

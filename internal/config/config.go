@@ -6,7 +6,7 @@ import (
 )
 
 type config struct {
-	Token string
+	Token    string
 	Username string
 }
 
