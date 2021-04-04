@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"github.com/codemicro/spacetraders/internal/control"
-	"time"
+	"os"
+	"os/signal"
 )
 
 func main() {
@@ -11,5 +13,9 @@ func main() {
 		panic(err)
 	}
 
-	time.Sleep(5 * time.Second)
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+	<-sig
+
+	fmt.Println("bye")
 }
