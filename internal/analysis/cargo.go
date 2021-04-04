@@ -2,18 +2,23 @@ package analysis
 
 import (
 	"github.com/codemicro/spacetraders/internal/stapi"
+	"sort"
 	"strings"
 )
 
-func PickCargo(options []*stapi.MarketplaceGood) *stapi.MarketplaceGood {
+type CargoMethod uint8
+
+const (
+	CargoMethodNone = iota
+	CargoMethodCheapest
+)
+
+func PickCargo(options []*stapi.MarketplaceGood, method CargoMethod) *stapi.MarketplaceGood {
 
 	// TODO: this thing
 
-	newOptions := make([]*stapi.MarketplaceGood, len(options))
-	copy(newOptions, options)
-
 	// remove fuel from cargo options
-	for i, opt := range newOptions {
+	for i, opt := range options {
 		if opt == nil { // this will occur if anything has been deleted, since it is replaced with nil
 			continue
 		}
@@ -22,5 +27,15 @@ func PickCargo(options []*stapi.MarketplaceGood) *stapi.MarketplaceGood {
 		}
 	}
 
-	return nil
+	sort.Slice(options, func(i, j int) bool {
+		return options[i].PurchasePricePerUnit < options[j].PurchasePricePerUnit
+	})
+
+	var targetCargo *stapi.MarketplaceGood
+	switch method {
+	case CargoMethodCheapest:
+		targetCargo = options[0]
+	}
+
+	return targetCargo
 }

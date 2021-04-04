@@ -45,7 +45,7 @@ func (s *ShipController) planFlight() (*plannedFlight, error) {
 		return nil, err
 	}
 
-	fp.cargo = analysis.PickCargo(marketplace)
+	fp.cargo = analysis.PickCargo(marketplace, analysis.CargoMethodCheapest)
 	if fp.cargo == nil {
 		// TODO: prevent loop!
 
