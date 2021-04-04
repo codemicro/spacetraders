@@ -16,12 +16,13 @@ import (
 // }
 
 type Location struct {
-	Symbol      string       `json:"symbol"`
-	Type        LocationType `json:"type"`
-	Name        string       `json:"name"`
-	XCoordinate int          `json:"x"`
-	YCoordinate int          `json:"y"`
-	Ships       []*Ship      `json:"ships"`
+	Symbol         string             `json:"symbol"`
+	Type           LocationType       `json:"type"`
+	Name           string             `json:"name"`
+	XCoordinate    int                `json:"x"`
+	YCoordinate    int                `json:"y"`
+	Ships          []*Ship            `json:"ships"`
+	AvailableGoods []*MarketplaceGood `json:"marketplace"`
 }
 
 type LocationType uint
