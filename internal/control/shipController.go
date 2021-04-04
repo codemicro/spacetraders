@@ -1,7 +1,7 @@
 package control
 
 import (
-	"github.com/codemicro/spacetraders/internal/analysis"
+	"fmt"
 	"github.com/codemicro/spacetraders/internal/stapi"
 	"github.com/imdario/mergo"
 	"strings"
@@ -23,7 +23,9 @@ func NewShipController(ship *stapi.Ship, core *Core) *ShipController {
 }
 
 func (s *ShipController) log(format string, a ...interface{}) {
-	s.core.Log("%s: "+format+"\n", append([]interface{}{s.ship.ID[:6]}, a...)...)
+	prefix := s.ship.ID[:6] + ": "
+	x := strings.ReplaceAll(fmt.Sprintf(format, a...), "\n", "\n"+strings.Repeat(" ", len(prefix)))
+	s.core.Log("%s%s\n", prefix, x)
 }
 
 func (s *ShipController) buyGood(good string, quantity int) error {
@@ -41,37 +43,13 @@ func (s *ShipController) refuel(amount int) error {
 func (s *ShipController) Start() {
 	s.log("online at %s (%d,%d)", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
 
-	locationsInThisSystem, err := stapi.GetSystemLocations(strings.Split(s.ship.Location, "-")[0])
+	fp, err := s.planFlight()
 	if err != nil {
-		s.log(err.Error()) // TODO: nice error handling
+		s.log("ERROR: %s", err.Error()) // TODO: nice error handling
 		return
 	}
 
-	currentLocation, err := stapi.GetLocationInfo(s.ship.Location)
-	if err != nil {
-		s.log(err.Error()) // TODO: nice error handling
-		return
-	}
-
-	flightDestination := analysis.PickRoute(currentLocation, locationsInThisSystem, analysis.RoutingMethodShort)
-	flightDistance := analysis.FindDistance(currentLocation, flightDestination)
-
-	journeyFuel := analysis.CalculateFuelForFlight(currentLocation, flightDestination)
-	extraFuelRequired := journeyFuel - s.ship.GetCurrentFuel()
-
-	s.log("found destination: dist %d, %#v", flightDistance, flightDestination)
-	s.log("total fuel required for journey: %d", journeyFuel)
-
-	if extraFuelRequired > 0 {
-		s.log("fuelling with %d units of fuel", extraFuelRequired)
-		err = s.refuel(extraFuelRequired)
-		if err != nil {
-			s.log(err.Error()) // TODO: nice error handling
-			return
-		}
-	} else {
-		s.log("no extra fuel required")
-	}
+	s.log("flightplan created\nCost: %d\nDestination: %s (%s)\nDistance: %d", fp.flightCost, fp.destination.Name, fp.destination.Symbol, fp.distance)
 
 	//goods, err := stapi.GetMarketplaceAtLocation(s.ship.Location)
 	//if err != nil {
