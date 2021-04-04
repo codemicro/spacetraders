@@ -1,5 +1,9 @@
 package stapi
 
+import (
+	"strings"
+)
+
 // {
 //   "id": "ckn10c5mj8363091bs69fldut5a",
 //   "location": "OE-PM",
@@ -30,4 +34,13 @@ type Ship struct {
 	Manufacturer   string   `json:"manufacturer"`
 	Plating        int      `json:"plating"`
 	Weapons        int      `json:"weapons"`
+}
+
+func (s *Ship) GetCurrentFuel() int {
+	for _, c := range s.Cargo {
+		if strings.EqualFold(c.Good, "fuel") {
+			return c.Quantity
+		}
+	}
+	return 0
 }
