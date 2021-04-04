@@ -16,7 +16,7 @@ func Start() error {
 	core := NewCore(userInfo)
 
 	for _, ship := range userInfo.Ships {
-		go ShipController(ship)
+		_ = NewShipController(ship, core)
 	}
 
 	return nil
