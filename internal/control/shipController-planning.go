@@ -8,13 +8,13 @@ import (
 )
 
 type plannedFlight struct {
-	preflightTasks []func() error
-	destination    *stapi.Location
-	cargo          *stapi.MarketplaceGood
+	preflightTasks    []func() error
+	destination       *stapi.Location
+	cargo             *stapi.MarketplaceGood
 	extraFuelRequired int
-	unitsCargo     int
-	flightCost     int
-	distance       int
+	unitsCargo        int
+	flightCost        int
+	distance          int
 }
 
 var (
@@ -44,7 +44,6 @@ func (s *ShipController) planFlight() (*plannedFlight, error) {
 	if err = s.planFuel(fp, currentLocation, marketplace); err != nil {
 		return nil, err
 	}
-
 
 	fp.cargo = analysis.PickCargo(marketplace)
 	if fp.cargo == nil {

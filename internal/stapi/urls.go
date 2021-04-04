@@ -17,5 +17,7 @@ var (
 	URLSubmitSellOrder       = func(username string) string { return URLBase + "users/" + username + "/sell-orders" }
 
 	URLSubmitFlightplan         = func(username string) string { return URLBase + "/users/" + username + "/flight-plans" }
-	URLGetFlightplanInformation = func(username, flightplanID string) string { return URLBase + "/users/" + username + "/flight-plans/" + flightplanID }
+	URLGetFlightplanInformation = func(username, flightplanID string) string {
+		return URLBase + "/users/" + username + "/flight-plans/" + flightplanID
+	}
 )
