@@ -50,8 +50,8 @@ func init() {
 func RecordMarketplaceAtLocation(location string, marketplace []*stapi.MarketplaceGood) error {
 
 	newMarketplace := make([]stapi.MarketplaceGood, len(marketplace))
-	for _, x := range marketplace {
-		newMarketplace = append(newMarketplace, *x)
+	for i, x := range marketplace {
+		newMarketplace[i] = *x
 	}
 
 	marketTrackerLock.Lock()
@@ -82,9 +82,23 @@ func GetMarketplaceAtLocation(location string) ([]*stapi.MarketplaceGood, bool) 
 	marketTrackerLock.RUnlock()
 
 	goods := make([]*stapi.MarketplaceGood, len(curr.Goods))
-	for _, x := range curr.Goods{
-		goods = append(goods, &x)
+	for i, x := range curr.Goods{
+		goods[i] = &x
 	}
 
 	return goods, true
+}
+
+func GetAllMarketplaces() Markets {
+
+	newMarkets := make(Markets)
+
+	marketTrackerLock.RLock()
+	// making copies to prevent the data structure being nil'd from under us
+	for key, val := range currentMarketState {
+		newMarkets[key] = val
+	}
+	marketTrackerLock.RUnlock()
+
+	return newMarkets
 }
