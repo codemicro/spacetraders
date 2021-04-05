@@ -1,6 +1,6 @@
 # spacetraders
 
-An automatic client to play [SpaceTraders](https://spacetraders.io)
+*An automatic client to play [SpaceTraders](https://spacetraders.io)*
 
 ![License](https://img.shields.io/github/license/codemicro/spacetraders) ![Lines of code](https://img.shields.io/tokei/lines/github/codemicro/spacetraders) [![Go Report Card](https://goreportcard.com/badge/github.com/codemicro/spacetraders)](https://goreportcard.com/report/github.com/codemicro/spacetraders)
 
@@ -12,7 +12,7 @@ An automatic client to play [SpaceTraders](https://spacetraders.io)
 
 * Take out loan (not yet automated)
 * Purchase two ships (not yet automated)
-* Pick the faster of the two ships, visit everything that has a marketplace with no cargo
+* Pick the faster of the two ships (this bit not automated), visit everything that has a marketplace with no cargo
   * This is the scout ship
   * The scout ship makes a note of the marketplace on each planet visit
 * Wait until the first ship has reached a second planet
