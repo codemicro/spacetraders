@@ -10,16 +10,15 @@
 
 ### Strategy
 
-* Take out loan (not yet automated)
-* Purchase two ships (not yet automated)
-* Pick the faster of the two ships (this bit not automated), visit everything that has a marketplace with no cargo
-  * This is the scout ship
-  * The scout ship makes a note of the marketplace on each planet visit
-* Wait until the first ship has reached a second planet
-* Run flights with the remaining ships for the best route with the best cargo from their current location (**WIP**)
+* Take out starter loan (not yet automated)
+* Purchase three ships (not yet automated)
+* Designate two ships as probe ships
+  * Send these two ships to two locations and sell all remaining fuel
+  * Use these ships to enable access to the market information for that location
+  * Collect market data every minute (or two?)
+* Use data from probes to find the best value route for trading ships to fly
   * Base this on `credits earned on sale / distance * volume` (credits per distance volume)
-  * Ensure all planet marketplaces are re-indexed whenever arriving at a new planet
-* When the scout has visited all planets with marketplaces, it then joins the trading fleet with the rest of the ships
+  * Only fly to locations with known markets
 
 ### Not yet automated
 
@@ -32,4 +31,3 @@
 ### `// TODO: ...`
 
 * Take available funds into account when planning what cargo to purchase.
-* Should there always be one ship scouting?
