@@ -11,12 +11,15 @@ import (
 type ShipController struct {
 	ship *stapi.Ship
 	core *Core
+
+	isScout bool
 }
 
-func NewShipController(ship *stapi.Ship, core *Core) *ShipController {
+func NewShipController(ship *stapi.Ship, core *Core, scout bool) *ShipController {
 	s := new(ShipController)
 	s.ship = ship
 	s.core = core
+	s.isScout = scout
 
 	go s.Start()
 
@@ -25,6 +28,9 @@ func NewShipController(ship *stapi.Ship, core *Core) *ShipController {
 
 func (s *ShipController) log(format string, a ...interface{}) {
 	prefix := s.ship.ID[:6] + ": "
+	if s.isScout {
+		format = "(SCOUT) " + format
+	}
 	x := strings.ReplaceAll(fmt.Sprintf(format, a...), "\n", "\n"+strings.Repeat(" ", len(prefix)))
 	s.core.Log("%s%s\n", prefix, x)
 }
@@ -58,6 +64,14 @@ func (s *ShipController) fileFlightplan(fp *plannedFlight) (*stapi.Flightplan, e
 
 func (s *ShipController) Start() {
 	s.log("online at %s (%d,%d)", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
+
+	for s.isScout {
+		// runs while in scout mode
+		if err := s.doScout(); err != nil {
+			s.log("ERROR: %s", err.Error()) // TODO: nice error handling
+			return
+		}
+	}
 
 	fp, err := s.planFlight()
 	if err != nil {

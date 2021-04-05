@@ -15,8 +15,12 @@ func Start() error {
 
 	core := NewCore(userInfo)
 
-	for _, ship := range userInfo.Ships {
-		_ = NewShipController(ship, core)
+	for i, ship := range userInfo.Ships {
+		var scout bool
+		if i == 0 {
+			scout = true
+		}
+		_ = NewShipController(ship, core, scout)
 	}
 
 	return nil
