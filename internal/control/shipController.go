@@ -48,7 +48,7 @@ func (s *ShipController) sellGood(good string, quantity int) (*stapi.Order, erro
 	if err != nil {
 		return nil, err
 	}
-	if err = mergo.Merge(s.ship, newShip); err != nil {
+	if err = mergo.Merge(s.ship, newShip); err != nil { // TODO: check - is this actually doing the correct thing?
 		return nil, err
 	}
 	return order, nil
@@ -67,7 +67,8 @@ func (s *ShipController) updateShipInfo() error {
 	if err != nil {
 		return err
 	}
-	return mergo.Merge(s.ship, newShip)
+	*s.ship = *newShip
+	return nil
 }
 
 func (s *ShipController) Start() {
