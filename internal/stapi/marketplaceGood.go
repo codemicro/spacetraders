@@ -29,6 +29,9 @@ var (
 )
 
 func GetMarketplaceAtLocation(location string) ([]*MarketplaceGood, error) {
+
+	// TODO: integrate this directly with marketplace stuff in analysis
+
 	url := URLMarketplaceAtLocation(location)
 	ts := struct {
 		Location *Location `json:"location"`

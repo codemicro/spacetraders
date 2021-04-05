@@ -66,6 +66,7 @@ var (
 )
 
 func GetSystemLocations(system string) ([]*Location, error) {
+	// TODO: Cache this
 	url := URLSystemLocations(system)
 	ts := struct {
 		Locations []*Location `json:"locations"`
