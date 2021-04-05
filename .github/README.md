@@ -28,3 +28,8 @@
 * Loan repayment
 * Ship purchasing/scrapping
   * Some lower capacity ships will need to be scrapped as more ships are bought online due to ratelimit concerns
+  
+### `// TODO: ...`
+
+* Take available funds into account when planning what cargo to purchase.
+* Should there always be one ship scouting?
