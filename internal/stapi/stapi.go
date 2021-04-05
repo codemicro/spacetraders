@@ -3,7 +3,6 @@ package stapi
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/codemicro/spacetraders/internal/config"
 	"github.com/hashicorp/go-multierror"
 	"github.com/parnurzeal/gorequest"
@@ -55,22 +54,6 @@ type completedRequest struct {
 	err      error
 }
 
-type ApiError struct {
-	StatusCode   int
-	ResponseBody []byte
-}
-
-func (err *ApiError) Error() string {
-	return fmt.Sprintf("stapi: the API returned a non-okay status code, %d", err.StatusCode)
-}
-
-func newApiError(statusCode int, responseBody []byte) *ApiError {
-	return &ApiError{
-		StatusCode:   statusCode,
-		ResponseBody: responseBody,
-	}
-}
-
 var (
 	requestQueue = make(chan trackedRequest, 1024)
 	responseCache = cache.New(time.Minute * 5, time.Minute * 5)
@@ -104,7 +87,7 @@ func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusC
 
 	// check status function
 	if !isStatusCodeOk(completed.response.StatusCode) {
-		return newApiError(completed.response.StatusCode, completed.body)
+		return newAPIError(completed.response.StatusCode, completed.body)
 	}
 
 	// at this point we can cache the response, since it's all ok
