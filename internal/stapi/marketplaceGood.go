@@ -42,6 +42,7 @@ func GetMarketplaceAtLocation(location string) ([]*MarketplaceGood, error) {
 		&ts,
 		func(i int) bool { return i == 200 },
 		map[int]error{404: ErrorLocationNotFound, 400: ErrorCannotViewMarketplace},
+		false,
 	)
 
 	if err != nil {

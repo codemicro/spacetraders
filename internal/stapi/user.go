@@ -40,6 +40,7 @@ func GetUserInfo(username string) (*User, error) {
 		&ts,
 		func(i int) bool { return i == 200 },
 		map[int]error{404: ErrorUserNotFound},
+		false,
 	)
 
 	return ts.User, err
@@ -57,6 +58,7 @@ func (u *User) coreTradeOrder(url string, output interface{}, shipID, good strin
 		&output,
 		func(i int) bool { return i == 201 },
 		map[int]error{404: ErrorUserNotFound},
+		false,
 	)
 }
 
@@ -116,6 +118,7 @@ func (u *User) SubmitFlightplan(shipID, destination string) (*Flightplan, error)
 		&ts,
 		func(i int) bool { return i == 201 },
 		map[int]error{404: ErrorUserNotFound},
+		false,
 	)
 
 	if err != nil {
@@ -136,6 +139,7 @@ func (u *User) GetFlightplan(flightplanID string) (*Flightplan, error) {
 		&ts,
 		func(i int) bool { return i == 200 },
 		map[int]error{404: ErrorUserNotFound},
+		false,
 	)
 
 	if err != nil {
@@ -156,6 +160,7 @@ func (u *User) GetShipInfo(shipID string) (*Ship, error) {
 		&ts,
 		func(i int) bool { return i == 200 },
 		map[int]error{404: ErrorUserNotFound},
+		false,
 	)
 
 	if err != nil {

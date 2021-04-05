@@ -7,6 +7,7 @@ import (
 	"github.com/codemicro/spacetraders/internal/config"
 	"github.com/hashicorp/go-multierror"
 	"github.com/parnurzeal/gorequest"
+	"github.com/patrickmn/go-cache"
 	"log"
 	"math/rand"
 	"net/http"
@@ -70,9 +71,16 @@ func newApiError(statusCode int, responseBody []byte) *ApiError {
 	}
 }
 
-var requestQueue = make(chan trackedRequest, 1024)
+var (
+	requestQueue = make(chan trackedRequest, 1024)
+	responseCache = cache.New(time.Minute * 5, time.Minute * 5)
+)
 
-func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusCodeOk func(int) bool, errorsByStatusCode map[int]error) error {
+func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusCodeOk func(int) bool, errorsByStatusCode map[int]error, allowCache bool) error {
+
+	if dat, found := responseCache.Get(req.Url); found {
+		return json.Unmarshal(*dat.(*[]byte), &output)
+	}
 
 	responseNotifier := make(chan *completedRequest)
 
@@ -99,6 +107,11 @@ func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusC
 		return newApiError(completed.response.StatusCode, completed.body)
 	}
 
+	// at this point we can cache the response, since it's all ok
+	if allowCache && req.Method == "GET" {
+		responseCache.Set(req.Url, &completed.body, cache.DefaultExpiration)
+	}
+
 	// parse response and return error or nil
 	return json.Unmarshal(completed.body, &output)
 }
@@ -106,10 +119,9 @@ func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusC
 var ErrorFailedRatelimit = errors.New("stapi: unable to make request (too many responses with 429)")
 
 func requestWorker() {
-	var retries int
-	for {
+	for rq := range requestQueue {
 
-		rq := <-requestQueue
+		var retries int
 
 		for {
 			resp, body, errs := rq.request.Clone().EndBytes()
@@ -132,7 +144,8 @@ func requestWorker() {
 					body:     body,
 					err:      ErrorFailedRatelimit,
 				}
-				continue
+				close(rq.responseNotifier)
+				break
 			}
 
 			var err error
