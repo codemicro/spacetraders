@@ -27,6 +27,8 @@ var (
 	ErrorUserNotFound = errors.New("stapi: user not found")
 )
 
+// TODO: the errors returned by these functions are not adequate
+
 func GetUserInfo(username string) (*User, error) {
 	url := URLUserInfo(username)
 	ts := struct {
@@ -141,4 +143,24 @@ func (u *User) GetFlightplan(flightplanID string) (*Flightplan, error) {
 	}
 
 	return ts.Flightplan, nil
+}
+
+func (u *User) GetShipInfo(shipID string) (*Ship, error) {
+	url := URLGetShipInfo(u.Username, shipID)
+	ts := struct {
+		Ship *Ship `json:"ship"`
+	}{}
+
+	err := orchestrateRequest(
+		request.Clone().Get(url),
+		&ts,
+		func(i int) bool { return i == 200 },
+		map[int]error{404: ErrorUserNotFound},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ts.Ship, nil
 }
