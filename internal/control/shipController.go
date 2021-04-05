@@ -83,50 +83,9 @@ func (s *ShipController) Start() {
 	s.log("waiting 5 seconds for cancellation...")
 	time.Sleep(time.Second * 5)
 
-	s.log("preparing for flight")
-
-	for _, task := range fp.preflightTasks {
-		if err = task(); err != nil {
-			s.log("ERROR: %s", err.Error()) // TODO: nice error handling
-			return
-		}
-	}
-
-	flightplan, err := s.fileFlightplan(fp)
-	if err != nil {
+	if err = s.doFlight(fp); err != nil {
 		s.log("ERROR: %s", err.Error()) // TODO: nice error handling
 		return
-	}
-
-	s.log("departing...\nFlightplan ID: %s", flightplan.ID)
-
-	sleepDuration := time.Minute
-	totalFlightDuration := flightplan.ArrivesAt.Sub(*flightplan.CreatedAt)
-	for {
-
-		flightplan, err = s.core.user.GetFlightplan(flightplan.ID)
-		if err != nil {
-			s.log("ERROR: %s", err.Error()) // TODO: nice error handling
-			return
-		}
-
-		if ut := time.Until(*flightplan.ArrivesAt); ut < sleepDuration {
-			sleepDuration = ut + (time.Second * 2)
-		}
-
-		var percentageComplete float32
-		{
-			durationFlown := time.Since(*flightplan.CreatedAt)
-			percentageComplete = float32(durationFlown) / float32(totalFlightDuration) * 100
-		}
-
-		if flightplan.TerminatedAt != nil {
-			s.log("arrived at %s", flightplan.TerminatedAt.Format(time.Kitchen))
-			break
-		}
-
-		s.log("en route - %.2f%% complete, %ds remaining", percentageComplete, flightplan.FlightTimeRemaining)
-		time.Sleep(sleepDuration)
 	}
 
 	if fp.cargo != nil {
