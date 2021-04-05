@@ -32,6 +32,7 @@ func (s *ShipController) planFlight() (*plannedFlight, error) {
 		return nil, err
 	}
 
+	// TODO: this is confining the ship to a single origin system
 	if err = s.planRoute(fp, currentLocation, strings.Split(s.ship.Location, "-")[0], analysis.RoutingMethodShort); err != nil {
 		return nil, err
 	}
