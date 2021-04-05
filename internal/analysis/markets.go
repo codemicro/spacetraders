@@ -16,7 +16,7 @@ type Markets map[string]*MarketInfo
 type MarketInfo struct {
 	Symbol string
 	Time   time.Time
-	Goods  []*stapi.MarketplaceGood
+	Goods  []stapi.MarketplaceGood
 }
 
 const marketTrackerFile = "markets.json"
@@ -48,13 +48,19 @@ func init() {
 }
 
 func RecordMarketplaceAtLocation(location string, marketplace []*stapi.MarketplaceGood) error {
+
+	newMarketplace := make([]stapi.MarketplaceGood, len(marketplace))
+	for _, x := range marketplace {
+		newMarketplace = append(newMarketplace, *x)
+	}
+
 	marketTrackerLock.Lock()
 	defer marketTrackerLock.Unlock()
 
 	currentMarketState[location] = &MarketInfo{
 		Symbol: location,
 		Time:   time.Now(),
-		Goods:  marketplace,
+		Goods:  newMarketplace,
 	}
 
 	jsonData, err := json.MarshalIndent(currentMarketState, "", "\t")
@@ -67,12 +73,18 @@ func RecordMarketplaceAtLocation(location string, marketplace []*stapi.Marketpla
 
 func GetMarketplaceAtLocation(location string) ([]*stapi.MarketplaceGood, bool) {
 	marketTrackerLock.RLock()
-	defer marketTrackerLock.RUnlock()
 
 	curr, ok := currentMarketState[location]
 	if !ok {
 		return nil, false
 	}
 
-	return curr.Goods, true
+	marketTrackerLock.RUnlock()
+
+	goods := make([]*stapi.MarketplaceGood, len(curr.Goods))
+	for _, x := range curr.Goods{
+		goods = append(goods, &x)
+	}
+
+	return goods, true
 }
