@@ -62,6 +62,14 @@ func (s *ShipController) fileFlightplan(fp *plannedFlight) (*stapi.Flightplan, e
 	return s.core.user.SubmitFlightplan(s.ship.ID, fp.destination.Symbol)
 }
 
+func (s *ShipController) updateShipInfo() error {
+	newShip, err := s.core.user.GetShipInfo(s.ship.ID)
+	if err != nil {
+		return err
+	}
+	return mergo.Merge(s.ship, newShip)
+}
+
 func (s *ShipController) Start() {
 	s.log("online at %s (%d,%d)", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
 
