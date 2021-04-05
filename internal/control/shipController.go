@@ -65,6 +65,14 @@ func (s *ShipController) fileFlightplan(fp *plannedFlight) (*stapi.Flightplan, e
 func (s *ShipController) Start() {
 	s.log("online at %s (%d,%d)", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
 
+	err := s.grabMarketplaceData()
+	if err != nil {
+		if err := s.doScout(); err != nil {
+			s.log("ERROR: %s", err.Error()) // TODO: nice error handling
+			return
+		}
+	}
+
 	for s.isScout {
 		// runs while in scout mode
 		if err := s.doScout(); err != nil {
