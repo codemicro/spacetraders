@@ -65,14 +65,14 @@ func RecordMarketplaceAtLocation(location string, marketplace []*stapi.Marketpla
 	return ioutil.WriteFile(marketTrackerFile, jsonData, 0644)
 }
 
-func GetMarketplaceAtLocation(location string) []*stapi.MarketplaceGood {
+func GetMarketplaceAtLocation(location string) ([]*stapi.MarketplaceGood, bool) {
 	marketTrackerLock.RLock()
 	defer marketTrackerLock.RUnlock()
 
 	curr, ok := currentMarketState[location]
 	if !ok {
-		return nil
+		return nil, false
 	}
 
-	return curr.Goods
+	return curr.Goods, true
 }
