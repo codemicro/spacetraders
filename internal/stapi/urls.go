@@ -21,5 +21,5 @@ var (
 		return URLBase + "users/" + username + "/flight-plans/" + flightplanID
 	}
 
-	URLGetShipInfo = func(username, shipID string) string { return URLBase + "users/" + username + "/ships/" + shipID}
+	URLGetShipInfo = func(username, shipID string) string { return URLBase + "users/" + username + "/ships/" + shipID }
 )

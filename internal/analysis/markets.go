@@ -15,15 +15,15 @@ type Markets map[string]*MarketInfo
 
 type MarketInfo struct {
 	Symbol string
-	Time time.Time
-	Goods []*stapi.MarketplaceGood
+	Time   time.Time
+	Goods  []*stapi.MarketplaceGood
 }
 
 const marketTrackerFile = "markets.json"
 
 var (
 	currentMarketState = make(Markets)
-	marketTrackerLock = new(sync.RWMutex)
+	marketTrackerLock  = new(sync.RWMutex)
 )
 
 func init() {

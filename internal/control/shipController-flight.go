@@ -34,7 +34,6 @@ func (s *ShipController) doFlight(fp *plannedFlight) error {
 			sleepDuration = ut + (time.Second * 2)
 		}
 
-
 		var percentageComplete float32
 		{
 			durationFlown := time.Since(*flightplan.CreatedAt)
