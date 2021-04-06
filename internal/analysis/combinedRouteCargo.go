@@ -42,20 +42,24 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 		distancesTo[location.Symbol] = FindDistance(currentLocation, location)
 	}
 
-	marketplaces := GetAllMarketplaces()
+	marketplaces, err := GetAllMarketplaces()
+	if err != nil {
+		return nil, nil, err
+	}
+
 	var rankings []cargoDestination
 
-	var currentLocationGoods []stapi.MarketplaceGood
+	var currentLocationGoods []*stapi.MarketplaceGood
 	for key, val := range marketplaces {
 		if strings.EqualFold(currentLocationSymbol, key) {
-			currentLocationGoods = val.Goods
+				currentLocationGoods = val
 		}
 	}
 
 	for _, currentLocationGood := range currentLocationGoods {
 		// for every other market
-		for _, market := range marketplaces {
-			for _, marketGood := range market.Goods {
+		for marketLocation, market := range marketplaces {
+			for _, marketGood := range market {
 				if strings.EqualFold(currentLocationGood.Symbol, marketGood.Symbol) {
 					// the destination also has this type of good
 
@@ -66,8 +70,8 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 
 					rankings = append(rankings, cargoDestination{
 						Cargo:       marketGood.Symbol,
-						Destination: market.Symbol,
-						Value:       float64(marketGood.SellPricePerUnit) / float64(distancesTo[market.Symbol]*marketGood.VolumePerUnit),
+						Destination: marketLocation,
+						Value:       float64(currentLocationGood.PurchasePricePerUnit - marketGood.SellPricePerUnit) / float64(distancesTo[marketLocation]*marketGood.VolumePerUnit),
 					})
 
 				}
@@ -97,7 +101,7 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 	var selectedGood *stapi.MarketplaceGood
 	for _, good := range currentLocationGoods {
 		if strings.EqualFold(selected.Cargo, good.Symbol) {
-			selectedGood = &good
+			selectedGood = good
 			break
 		}
 	}

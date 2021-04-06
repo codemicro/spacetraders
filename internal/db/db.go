@@ -35,7 +35,7 @@ func GetShip(id string) (*Ship, bool, error) {
 	sh.ID = id
 	err := Conn.Take(&sh).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, false, nil
+		return nil, false, err
 	} else if err != nil {
 		return nil, false, err
 	}
@@ -73,9 +73,14 @@ func GetLatestDataForLocation(location string) (*Market, bool, error) {
 	ma.Location = location
 	err := Conn.Where(&ma).Order("created_at desc").Take(&ma).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, false, nil
+		return nil, false, err
 	} else if err != nil {
 		return nil, false, err
 	}
 	return &ma, true, nil
+}
+
+func GetMarketLocations() ([]string, error) {
+	var locations []string
+	return locations, Conn.Model(&Market{}).Distinct().Pluck("location", &locations).Error
 }
