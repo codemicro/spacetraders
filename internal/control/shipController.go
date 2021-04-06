@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/codemicro/spacetraders/internal/stapi"
 	"github.com/imdario/mergo"
+	"github.com/logrusorgru/aurora"
 	"strings"
 	"time"
 )
@@ -32,7 +33,7 @@ func (s *ShipController) log(format string, a ...interface{}) {
 		format = "(SCOUT) " + format
 	}
 	x := strings.ReplaceAll(fmt.Sprintf(format, a...), "\n", "\n"+strings.Repeat(" ", len(prefix)))
-	s.core.Log("%s%s\n", prefix, x)
+	s.core.Log("%s%s\n", aurora.Yellow(prefix), x)
 }
 
 func (s *ShipController) buyGood(good string, quantity int) error {
