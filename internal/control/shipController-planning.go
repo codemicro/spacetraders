@@ -23,6 +23,37 @@ var (
 	ErrorCannotPickCargo = errors.New("shipController: could not choose a cargo (this is probably a programming error")
 )
 
+func (s *ShipController) planFlight(destinationString string) (*plannedFlight, error) {
+	fp := new(plannedFlight)
+
+	currentLocation, err := stapi.GetLocationInfo(s.ship.Location)
+	if err != nil {
+		return nil, err
+	}
+
+	marketplace, err := stapi.GetMarketplaceAtLocation(currentLocation.Symbol)
+	if err != nil {
+		return nil, err
+	}
+
+	destination, err := stapi.GetLocationInfo(destinationString)
+	if err != nil {
+		return nil, err
+	}
+
+	flightDistance := analysis.FindDistance(currentLocation, destination)
+
+	fp.destination = destination
+	fp.distance = flightDistance
+	fp.cargo = nil
+
+	if err = s.planFuel(fp, currentLocation, marketplace); err != nil {
+		return nil, err
+	}
+
+	return fp, nil
+}
+
 func (s *ShipController) planCargoFlight() (*plannedFlight, error) {
 
 	fp := new(plannedFlight)
@@ -36,7 +67,7 @@ func (s *ShipController) planCargoFlight() (*plannedFlight, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	destination, cargo, err := analysis.FindCombinedRouteAndCargo(s.ship.Location)
 	if err != nil {
 		return nil, err
