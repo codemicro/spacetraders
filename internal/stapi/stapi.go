@@ -3,7 +3,6 @@ package stapi
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/codemicro/spacetraders/internal/config"
 	"github.com/hashicorp/go-multierror"
 	"github.com/parnurzeal/gorequest"
@@ -43,11 +42,6 @@ func init() {
 	for i := 0; i < numWorkers; i += 1 {
 		go requestWorker()
 	}
-
-	go func() {
-		time.Sleep(time.Second * 10)
-		fmt.Println(responseCache.Items())
-	}()
 
 }
 
@@ -98,7 +92,6 @@ func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusC
 		}
 
 		if dat, found := responseCache.Get(req.Url); found {
-			log.Info().Msg("returning cached response for " + req.Url)
 			return json.Unmarshal(*dat.(*[]byte), &output)
 		}
 
