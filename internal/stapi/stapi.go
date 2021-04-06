@@ -23,15 +23,17 @@ const (
 var request = gorequest.New().
 	Timeout(10*time.Second).
 	Set("Authorization", "Bearer "+config.C.Token).
-	SetDebug(true)
+	SetDebug(config.C.DebugMode)
 
 func init() {
 
-	f, err := os.OpenFile("request.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
+	if config.C.DebugMode {
+		f, err := os.OpenFile("request.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			panic(err)
+		}
+		request.SetLogger(log.New(f, "", 0))
 	}
-	request.SetLogger(log.New(f, "", 0))
 
 	rand.Seed(time.Now().UnixNano())
 

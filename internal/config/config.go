@@ -6,8 +6,9 @@ import (
 )
 
 type config struct {
-	Token    string
-	Username string
+	Token     string
+	Username  string
+	DebugMode bool
 }
 
 var C config
