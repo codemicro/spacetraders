@@ -53,6 +53,11 @@ func CountShips() (int, error) {
 	return int(n), Conn.Model(&Ship{}).Count(&n).Error
 }
 
+func CountShipsOfType(shipType int) (int, error) {
+	var n int64
+	return int(n), Conn.Model(&Ship{}).Where(&Ship{Type: shipType}).Count(&n).Error
+}
+
 type Market struct {
 	gorm.Model
 	Location string
