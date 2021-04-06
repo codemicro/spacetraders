@@ -5,8 +5,10 @@ import (
 	"github.com/codemicro/spacetraders/internal/stapi"
 	"github.com/codemicro/spacetraders/internal/tool"
 	"github.com/imdario/mergo"
+	"github.com/logrusorgru/aurora"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"strings"
 	"time"
 )
 
@@ -34,7 +36,12 @@ func NewShipController(ship *stapi.Ship, core *Core, scout bool) *ShipController
 }
 
 func (s *ShipController) log(format string, a ...interface{}) {
-	s.logger.Info().Msg(fmt.Sprintf(format, a...))
+	prefix := s.ship.ID[:6] + ": "
+	if s.isScout {
+		format = "(SCOUT) " + format
+	}
+	x := strings.ReplaceAll(fmt.Sprintf(format, a...), "\n", "\n"+strings.Repeat(" ", len(prefix)))
+	s.core.Log("%s%s\n", aurora.Yellow(prefix), x)
 }
 
 func (s *ShipController) error(err error) {
