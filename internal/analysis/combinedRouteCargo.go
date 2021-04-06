@@ -50,10 +50,12 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 	var rankings []cargoDestination
 
 	var currentLocationGoods []*stapi.MarketplaceGood
-	for key, val := range marketplaces {
-		if strings.EqualFold(currentLocationSymbol, key) {
-				currentLocationGoods = val
+	{
+		curr, err := stapi.GetMarketplaceAtLocation(currentLocationSymbol)
+		if err != nil {
+			return nil, nil, err
 		}
+		currentLocationGoods = curr
 	}
 
 	for _, currentLocationGood := range currentLocationGoods {
