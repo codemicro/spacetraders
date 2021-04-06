@@ -11,7 +11,9 @@ import (
 var Conn *gorm.DB
 
 func init() {
-	db, err := gorm.Open(sqlite.Open(config.C.DatabaseFile), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(config.C.DatabaseFile), &gorm.Config{
+		Logger: nil,
+	})
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
