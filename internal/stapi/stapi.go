@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/parnurzeal/gorequest"
 	"github.com/patrickmn/go-cache"
-	"github.com/rs/zerolog/log"
 	coreLog "log"
 	"math/rand"
 	"net/http"
