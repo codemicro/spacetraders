@@ -42,12 +42,8 @@ func GetShip(id string) (*Ship, bool, error) {
 	return &sh, true, nil
 }
 
-func NewShip(id string, shipType int, data string) error {
-	return Conn.Create(&Ship{
-		ID:   id,
-		Type: shipType,
-		Data: data,
-	}).Error
+func (s *Ship) Create() error {
+	return Conn.Create(s).Error
 }
 
 func CountShips() (int, error) {
