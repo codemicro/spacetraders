@@ -23,7 +23,7 @@ var (
 	ErrorCannotPickCargo = errors.New("shipController: could not choose a cargo (this is probably a programming error")
 )
 
-func (s *ShipController) planFlight() (*plannedFlight, error) {
+func (s *ShipController) planFlight(takeCargo bool) (*plannedFlight, error) {
 
 	fp := new(plannedFlight)
 

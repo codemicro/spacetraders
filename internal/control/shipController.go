@@ -12,21 +12,28 @@ import (
 	"time"
 )
 
+const (
+	ShipTypeTrader = iota
+	ShipTypeProbe
+)
+
 type ShipController struct {
 	ship *stapi.Ship
 	core *Core
 
 	logger zerolog.Logger
 
-	isScout bool
+	shipType int
+	data string
 }
 
-func NewShipController(ship *stapi.Ship, core *Core, scout bool) *ShipController {
+func NewShipController(ship *stapi.Ship, core *Core, shipType int, data string) *ShipController {
 	s := new(ShipController)
 	s.ship = ship
 	s.core = core
 
-	s.isScout = scout
+	s.shipType = shipType
+	s.data = data
 
 	s.logger = log.With().Str("area", "ShipController").Str("shipID", s.ship.ID).Logger()
 
@@ -37,8 +44,8 @@ func NewShipController(ship *stapi.Ship, core *Core, scout bool) *ShipController
 
 func (s *ShipController) log(format string, a ...interface{}) {
 	prefix := s.ship.ID[:6] + ": "
-	if s.isScout {
-		format = "(SCOUT) " + format
+	if s.shipType == ShipTypeProbe {
+		format = "(PROBE) " + format
 	}
 	x := strings.ReplaceAll(fmt.Sprintf(format, a...), "\n", "\n"+strings.Repeat(" ", len(prefix)))
 	s.core.Log("%s%s\n", aurora.Yellow(prefix), x)
@@ -87,23 +94,13 @@ func (s *ShipController) updateShipInfo() error {
 func (s *ShipController) Start() {
 	s.log("online at %s (%d,%d)", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
 
-	err := s.grabMarketplaceData()
-	if err != nil {
-		if err := s.doScout(); err != nil {
-			s.error(err)
-			return
+	if s.shipType == ShipTypeProbe {
+		if s.ship.Location != s.data {
+
 		}
 	}
 
-	for s.isScout {
-		// runs while in scout mode
-		if err := s.doScout(); err != nil {
-			s.error(err)
-			return
-		}
-	}
-
-	fp, err := s.planFlight()
+	fp, err := s.planFlight(true)
 	if err != nil {
 		s.error(err)
 		return
