@@ -18,7 +18,7 @@ func NewCore(user *stapi.User) *Core {
 	return c
 }
 
-func (c *Core) Log(format string, a ...interface{}) {
+func (c *Core) WriteToStdout(format string, a ...interface{}) {
 	c.stdoutLock.Lock()
 	defer c.stdoutLock.Unlock()
 	fmt.Printf(format, a...)

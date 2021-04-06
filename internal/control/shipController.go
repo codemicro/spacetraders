@@ -48,7 +48,7 @@ func (s *ShipController) log(format string, a ...interface{}) {
 		format = "(PROBE) " + format
 	}
 	x := strings.ReplaceAll(fmt.Sprintf(format, a...), "\n", "\n"+strings.Repeat(" ", len(prefix)))
-	s.core.Log("%s%s\n", aurora.Yellow(prefix), x)
+	s.core.WriteToStdout("%s%s\n", aurora.Yellow(prefix), x)
 }
 
 func (s *ShipController) error(err error) {
