@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+	"time"
 )
 
 // {
@@ -76,7 +77,7 @@ func GetSystemLocations(system string) ([]*Location, error) {
 		&ts,
 		func(i int) bool { return i == 200 },
 		map[int]error{404: ErrorSystemNotFound},
-		true,
+		cachePolicy{ true, time.Minute * 10 },
 	)
 
 	return ts.Locations, err
@@ -93,7 +94,7 @@ func GetLocationInfo(location string) (*Location, error) {
 		&ts,
 		func(i int) bool { return i == 200 },
 		map[int]error{404: ErrorLocationNotFound},
-		true,
+		cachePolicy{ true, time.Minute * 10 },
 	)
 
 	return ts.Location, err

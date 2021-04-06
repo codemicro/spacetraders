@@ -1,6 +1,9 @@
 package stapi
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 // {
 //   "symbol": "SHIP_PARTS",
@@ -42,7 +45,7 @@ func GetMarketplaceAtLocation(location string) ([]*MarketplaceGood, error) {
 		&ts,
 		func(i int) bool { return i == 200 },
 		map[int]error{404: ErrorLocationNotFound, 400: ErrorCannotViewMarketplace},
-		false,
+		cachePolicy{ true, time.Second * 10 },
 	)
 
 	if err != nil {

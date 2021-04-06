@@ -3,15 +3,18 @@ package stapi
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/codemicro/spacetraders/internal/config"
 	"github.com/hashicorp/go-multierror"
 	"github.com/parnurzeal/gorequest"
 	"github.com/patrickmn/go-cache"
-	"log"
+	"github.com/rs/zerolog/log"
+	coreLog "log"
 	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -32,7 +35,7 @@ func init() {
 		if err != nil {
 			panic(err)
 		}
-		request.SetLogger(log.New(f, "", 0))
+		request.SetLogger(coreLog.New(f, "", 0))
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -40,6 +43,11 @@ func init() {
 	for i := 0; i < numWorkers; i += 1 {
 		go requestWorker()
 	}
+
+	go func() {
+		time.Sleep(time.Second * 10)
+		fmt.Println(responseCache.Items())
+	}()
 
 }
 
@@ -56,15 +64,49 @@ type completedRequest struct {
 	err      error
 }
 
+type cachePolicy struct {
+	Allow bool
+	CacheDuration time.Duration
+}
+
 var (
 	requestQueue = make(chan trackedRequest, 1024)
 	responseCache = cache.New(time.Minute * 5, time.Minute * 5)
+
+	requestsInProgressLock sync.RWMutex
+	requestsInProgress = make(map[string]*sync.WaitGroup)
 )
 
-func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusCodeOk func(int) bool, errorsByStatusCode map[int]error, allowCache bool) error {
+func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusCodeOk func(int) bool, errorsByStatusCode map[int]error, cPolicy cachePolicy) error {
 
-	if dat, found := responseCache.Get(req.Url); found {
-		return json.Unmarshal(*dat.(*[]byte), &output)
+	allowCache := cPolicy.Allow && req.Method == "GET"
+
+	var wg *sync.WaitGroup
+
+	if allowCache {
+
+		// Because of the nature of the queue system used in this program, multiple requests for the same cache-able resource can be in the queue at any one time.
+		// To remedy this, a map of currently queued requests is held with a wait group.
+		// If a request for an in-progress resource comes in, execution will be blocked until the request has been completed and the response cached.
+
+		requestsInProgressLock.RLock()
+		wg = requestsInProgress[req.Url]
+		requestsInProgressLock.RUnlock()
+
+		if wg != nil {
+			wg.Wait()
+		}
+
+		if dat, found := responseCache.Get(req.Url); found {
+			log.Info().Msg("returning cached response for " + req.Url)
+			return json.Unmarshal(*dat.(*[]byte), &output)
+		}
+
+		requestsInProgressLock.Lock()
+		wg = new(sync.WaitGroup)
+		wg.Add(1)
+		requestsInProgress[req.Url] = wg
+		requestsInProgressLock.Unlock()
 	}
 
 	responseNotifier := make(chan *completedRequest)
@@ -93,8 +135,13 @@ func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusC
 	}
 
 	// at this point we can cache the response, since it's all ok
-	if allowCache && req.Method == "GET" {
-		responseCache.Set(req.Url, &completed.body, cache.DefaultExpiration)
+	if allowCache {
+		responseCache.Set(req.Url, &completed.body, cPolicy.CacheDuration)
+		wg.Done()
+
+		requestsInProgressLock.Lock()
+		delete(requestsInProgress, req.Url)
+		requestsInProgressLock.Unlock()
 	}
 
 	// parse response and return error or nil
