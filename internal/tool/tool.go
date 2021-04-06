@@ -30,3 +30,12 @@ func GetContext(skip int) string {
 	}
 	return "unable to determine caller"
 }
+
+func IsStringInSlice(needle string, haystack []string) bool {
+	for _, x := range haystack {
+		if needle == x {
+			return true
+		}
+	}
+	return false
+}

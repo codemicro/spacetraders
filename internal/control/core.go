@@ -56,12 +56,50 @@ func (c *Core) Start() {
 		}
 		if !found {
 
-			c.log("found unrecognised ship %s, categorising as trader", ship.ID)
+			numTraders, err := db.CountShipsOfType(ShipTypeTrader)
+			if err != nil {
+				c.error(err)
+				return
+			}
+			numProbes, err := db.CountShipsOfType(ShipTypeProbe)
+			if err != nil {
+				c.error(err)
+				return
+			}
+
+			var numberOfLocations int
+			systemLocations, err := stapi.GetSystemLocations(tool.SystemFromSymbol(ship.Location))
+			if err != nil {
+				c.error(err)
+				return
+			}
+			numberOfLocations = len(systemLocations)
+
+			targetShipType := ShipTypeTrader
+			var targetShipData string
+			if numProbes < numTraders && numProbes < numberOfLocations {
+				targetShipType = ShipTypeProbe
+				{
+					currentProbeLocations, err := db.GetShipDataByType(ShipTypeProbe)
+					if err !=  nil {
+						c.error(err)
+						return
+					}
+					for _, location := range systemLocations {
+						if !tool.IsStringInSlice(location.Symbol, currentProbeLocations) {
+							targetShipData = location.Symbol
+							break
+						}
+					}
+				}
+			}
+
+			c.log("found unrecognised ship %s, categorising as %d", ship.ID, targetShipType)
 
 			dbShip = &db.Ship{
 				ID:   ship.ID,
-				Type: ShipTypeTrader,
-				Data: "",
+				Type: targetShipType,
+				Data: targetShipData,
 			}
 			err = dbShip.Create()
 			if err != nil {

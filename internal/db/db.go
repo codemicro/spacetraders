@@ -6,13 +6,14 @@ import (
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var Conn *gorm.DB
 
 func init() {
 	db, err := gorm.Open(sqlite.Open(config.C.DatabaseFile), &gorm.Config{
-		Logger: nil,
+		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
 		log.Fatal().Err(err).Send()
@@ -56,6 +57,11 @@ func CountShips() (int, error) {
 func CountShipsOfType(shipType int) (int, error) {
 	var n int64
 	return int(n), Conn.Model(&Ship{}).Where(&Ship{Type: shipType}).Count(&n).Error
+}
+
+func GetShipDataByType(shipType int) ([]string, error) {
+	var datas []string
+	return datas, Conn.Model(&Ship{}).Where(&Ship{Type: shipType}).Distinct().Pluck("data", &datas).Error
 }
 
 type Market struct {
