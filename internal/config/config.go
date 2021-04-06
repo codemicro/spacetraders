@@ -12,6 +12,7 @@ type config struct {
 	Token     string
 	Username  string
 	DebugMode bool
+	DatabaseFile string
 }
 
 var C config

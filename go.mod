@@ -13,5 +13,7 @@ require (
 	github.com/rs/zerolog v1.21.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c // indirect
+	gorm.io/driver/sqlite v1.1.4 // indirect
+	gorm.io/gorm v1.21.6 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 )
