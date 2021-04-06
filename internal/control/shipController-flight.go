@@ -55,10 +55,5 @@ func (s *ShipController) doFlight(fp *plannedFlight) error {
 		return err
 	}
 
-	s.log("grabbing marketplace data for %s", s.ship.Location)
-	if err = s.grabMarketplaceData(); err != nil {
-		s.log("WARNING: failed to grab marketplace data after flight\n%s", err.Error()) // TODO: nice warning
-	}
-
 	return nil
 }
