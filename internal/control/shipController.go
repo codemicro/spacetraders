@@ -94,16 +94,29 @@ func (s *ShipController) updateShipInfo() error {
 func (s *ShipController) Start() {
 	s.log("online at %s (%d,%d)", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
 
+	var fp *plannedFlight
+
 	if s.shipType == ShipTypeProbe {
 		if s.ship.Location != s.data {
-
+			var err error
+			s.log("planning flight to %s", s.data)
+			fp, err = s.planFlight(s.data)
+			if err != nil {
+				s.error(err)
+				return
+			}
+		} else {
+			s.log("already at target location %s (%d,%d), not moving", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
+			return
 		}
-	}
-
-	fp, err := s.planCargoFlight()
-	if err != nil {
-		s.error(err)
-		return
+	} else {
+		var err error
+		s.log("planning cargo flight")
+		fp, err = s.planCargoFlight()
+		if err != nil {
+			s.error(err)
+			return
+		}
 	}
 
 	cargoString := "none"
@@ -124,7 +137,7 @@ func (s *ShipController) Start() {
 	s.log("waiting 5 seconds for cancellation...")
 	time.Sleep(time.Second * 5)
 
-	if err = s.doFlight(fp); err != nil {
+	if err := s.doFlight(fp); err != nil {
 		s.error(err)
 		return
 	}
