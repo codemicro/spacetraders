@@ -100,7 +100,7 @@ func (s *ShipController) Start() {
 		}
 	}
 
-	fp, err := s.planFlight(true)
+	fp, err := s.planCargoFlight()
 	if err != nil {
 		s.error(err)
 		return

@@ -23,7 +23,7 @@ var (
 	ErrorCannotPickCargo = errors.New("shipController: could not choose a cargo (this is probably a programming error")
 )
 
-func (s *ShipController) planFlight(takeCargo bool) (*plannedFlight, error) {
+func (s *ShipController) planCargoFlight() (*plannedFlight, error) {
 
 	fp := new(plannedFlight)
 
@@ -32,47 +32,11 @@ func (s *ShipController) planFlight(takeCargo bool) (*plannedFlight, error) {
 		return nil, err
 	}
 
-	//
-	//// TODO: this is confining the ship to a single origin system
-	//if err = s.planRoute(fp, currentLocation, strings.Split(s.ship.Location, "-")[0], analysis.RoutingMethodShort); err != nil {
-	//	return nil, err
-	//}
-	//
 	marketplace, err := stapi.GetMarketplaceAtLocation(currentLocation.Symbol)
 	if err != nil {
 		return nil, err
 	}
-	//
-	//if err = s.planFuel(fp, currentLocation, marketplace); err != nil {
-	//	return nil, err
-	//}
-	//
-	//fp.cargo = analysis.PickCargo(marketplace, analysis.CargoMethodCheapest)
-	//if fp.cargo == nil {
-	//	// TODO: prevent loop!
-	//
-	//	// we're replanning, so we need to clear all preflight tasks
-	//	fp.preflightTasks = nil
-	//
-	//	// if no cargo can be selected that makes monetary sense, fly the shortest flight possible empty
-	//	if err = s.planRoute(fp, currentLocation, strings.Split(s.ship.Location, "-")[0], analysis.RoutingMethodShort); err != nil {
-	//		return nil, err
-	//	}
-	//
-	//	if err = s.planFuel(fp, currentLocation, marketplace); err != nil {
-	//		return nil, err
-	//	}
-	//
-	//} else {
-	//	fp.unitsCargo = (s.ship.SpaceAvailable - fp.extraFuelRequired) / fp.cargo.VolumePerUnit
-	//	fp.flightCost += fp.cargo.PurchasePricePerUnit * fp.unitsCargo
-	//
-	//	fp.preflightTasks = append(fp.preflightTasks, func() error {
-	//		s.log("purchasing %d units of cargo %s", fp.unitsCargo, fp.cargo.Symbol)
-	//		return s.buyGood(fp.cargo.Symbol, fp.unitsCargo)
-	//	})
-	//}
-
+	
 	destination, cargo, err := analysis.FindCombinedRouteAndCargo(s.ship.Location)
 	if err != nil {
 		return nil, err
