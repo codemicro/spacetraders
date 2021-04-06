@@ -8,12 +8,15 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"io/ioutil"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Core struct {
 	user *stapi.User
+	allowStartNewFlight bool
 
 	logger zerolog.Logger
 
@@ -24,8 +27,25 @@ func NewCore(user *stapi.User) *Core {
 	c := new(Core)
 	c.user = user
 	c.logger = log.With().Str("area", "Core").Str("username", c.user.Username).Logger()
+	c.allowStartNewFlight = true
 
 	go c.Start()
+
+	go func() {
+		for {
+			time.Sleep(time.Second * 10)
+			fcont, err := ioutil.ReadFile("killswitch.txt")
+			if err != nil {
+				c.error(err)
+			} else {
+				if len(fcont) != 0 {
+					c.allowStartNewFlight = false
+					c.log("stopping all new flights...")
+					return
+				}
+			}
+		}
+	}()
 
 	return c
 }

@@ -50,10 +50,5 @@ func (s *ShipController) doFlight(fp *plannedFlight) error {
 		time.Sleep(sleepDuration)
 	}
 
-	s.log("updating ship information")
-	if err = s.updateShipInfo(); err != nil {
-		return err
-	}
-
 	return nil
 }

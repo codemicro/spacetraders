@@ -8,12 +8,14 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"math/rand"
 	"strings"
 	"time"
 )
 
 const (
-	ShipTypeTrader = iota
+	doNotUse = iota // if there is a ship type with 0, it is treated as all ships by GORM
+	ShipTypeTrader
 	ShipTypeProbe
 )
 
@@ -43,7 +45,7 @@ func NewShipController(ship *stapi.Ship, core *Core, shipType int, data string) 
 }
 
 func (s *ShipController) log(format string, a ...interface{}) {
-	prefix := s.ship.ID[:6] + ": "
+	prefix := s.ship.ID + ": "
 	if s.shipType == ShipTypeProbe {
 		format = "(PROBE) " + format
 	}
@@ -94,67 +96,83 @@ func (s *ShipController) updateShipInfo() error {
 func (s *ShipController) Start() {
 	s.log("online at %s (%d,%d)", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
 
-	var fp *plannedFlight
+	//if s.shipType == ShipTypeTrader {
+	//	s.log("waiting for a minute for marketplace locations to update")
+	//	time.Sleep(time.Minute)
+	//}
 
-	if s.shipType == ShipTypeProbe {
-		if s.ship.Location != s.data {
+	for s.core.allowStartNewFlight {
+		var fp *plannedFlight
+
+		if s.shipType == ShipTypeProbe {
+			if s.ship.Location != s.data {
+				var err error
+				s.log("planning flight to %s", s.data)
+				fp, err = s.planFlight(s.data)
+				if err != nil {
+					s.error(err)
+					return
+				}
+			} else {
+				s.log("already at target location %s (%d,%d), not moving", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
+				time.Sleep(time.Second * time.Duration(rand.Intn(59))) // so we don't get a huge barrage of requests all at once
+				s.probeAction()
+				return // in case of an error returning
+			}
+
+		} else {
 			var err error
-			s.log("planning flight to %s", s.data)
-			fp, err = s.planFlight(s.data)
+			s.log("planning cargo flight")
+			fp, err = s.planCargoFlight()
 			if err != nil {
 				s.error(err)
 				return
 			}
-		} else {
-			s.log("already at target location %s (%d,%d), not moving", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
-			return
 		}
-	} else {
-		var err error
-		s.log("planning cargo flight")
-		fp, err = s.planCargoFlight()
-		if err != nil {
-			s.error(err)
-			return
+
+		cargoString := "none"
+		if fp.cargo != nil {
+			cargoString = fmt.Sprintf("%s (%d units)", fp.cargo.Symbol, fp.unitsCargo)
 		}
-	}
 
-	cargoString := "none"
-	if fp.cargo != nil {
-		cargoString = fmt.Sprintf("%s (%d units)", fp.cargo.Symbol, fp.unitsCargo)
-	}
+		s.log(
+			"flightplan created\nCost: %dcr\nExtra fuel: %d units\nCargo: %s\nDestination: %s (%s)\nDistance: %d",
+			fp.flightCost,
+			fp.extraFuelRequired,
+			cargoString,
+			fp.destination.Name,
+			fp.destination.Symbol,
+			fp.distance,
+		)
 
-	s.log(
-		"flightplan created\nCost: %dcr\nExtra fuel: %d units\nCargo: %s\nDestination: %s (%s)\nDistance: %d",
-		fp.flightCost,
-		fp.extraFuelRequired,
-		cargoString,
-		fp.destination.Name,
-		fp.destination.Symbol,
-		fp.distance,
-	)
+		s.log("waiting 5 seconds for cancellation...")
+		time.Sleep(time.Second * 5)
 
-	s.log("waiting 5 seconds for cancellation...")
-	time.Sleep(time.Second * 5)
-
-	if err := s.doFlight(fp); err != nil {
-		s.error(err)
-		return
-	}
-
-	if fp.cargo != nil {
-
-		s.log("selling cargo")
-
-		order, err := s.sellGood(fp.cargo.Symbol, fp.unitsCargo)
-		if err != nil {
+		if err := s.doFlight(fp); err != nil {
 			s.error(err)
 			return
 		}
 
-		s.log("sold for %dcr - profit of %dcr", order.Total, order.Total-fp.flightCost)
+		if fp.cargo != nil {
 
+			s.log("selling cargo")
+
+			order, err := s.sellGood(fp.cargo.Symbol, fp.unitsCargo)
+			if err != nil {
+				s.error(err)
+				return
+			}
+
+			s.log("sold for %dcr - profit of %dcr", order.Total, order.Total-fp.flightCost)
+
+		}
+
+		s.log("updating ship information")
+		if err := s.updateShipInfo(); err != nil {
+			s.error(err)
+			return
+		}
+
+		s.log("done")
 	}
-
-	s.log("done")
 }
