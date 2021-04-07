@@ -75,7 +75,7 @@ func (c *Core) WriteToStdout(format string, a ...interface{}) {
 func (c *Core) log(format string, a ...interface{}) {
 	prefix := c.user.Username + ": "
 	x := strings.ReplaceAll(fmt.Sprintf(format, a...), "\n", "\n"+strings.Repeat(" ", len(prefix)))
-	c.WriteToStdout("%s%s\n", aurora.BrightGreen(prefix), x)
+	c.WriteToStdout("%s%s\n", aurora.BrightRed(prefix), x)
 }
 
 func (c *Core) error(err error) {
@@ -120,6 +120,14 @@ func (c *Core) Start() {
 			}
 			numberOfLocations = len(systemLocations)
 
+			{
+				for _, x := range systemLocations {
+					if x.Type == stapi.LocationTypeWormhole {
+						numberOfLocations -= 1 // this prevents probe ships being sent to wormholes
+					}
+				}
+			}
+
 			targetShipType := ShipTypeTrader
 			var targetShipData string
 			if numProbes < numTraders && numProbes < numberOfLocations {
@@ -131,7 +139,7 @@ func (c *Core) Start() {
 						return
 					}
 					for _, location := range systemLocations {
-						if !tool.IsStringInSlice(location.Symbol, currentProbeLocations) {
+						if !tool.IsStringInSlice(location.Symbol, currentProbeLocations) && location.Type != stapi.LocationTypeWormhole {
 							targetShipData = location.Symbol
 							break
 						}
