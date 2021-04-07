@@ -8,7 +8,7 @@ import (
 
 func (s *ShipController) probeAction() {
 	for {
-		s.log("recording marketplace at %s", s.ship.Location)
+		// s.log("recording marketplace at %s", s.ship.Location)
 		marketplace, err := stapi.GetMarketplaceAtLocation(s.ship.Location)
 		if err != nil {
 			s.error(err)

@@ -23,6 +23,8 @@ var (
 	ErrorCannotPickCargo = errors.New("shipController: could not choose a cargo (this is probably a programming error")
 )
 
+const cargoSpendLimit = 8000
+
 func (s *ShipController) planFlight(destinationString string) (*plannedFlight, error) {
 	fp := new(plannedFlight)
 
@@ -83,7 +85,17 @@ func (s *ShipController) planCargoFlight() (*plannedFlight, error) {
 		return nil, err
 	}
 
-	fp.unitsCargo = (s.ship.SpaceAvailable - fp.extraFuelRequired) / fp.cargo.VolumePerUnit
+	unitsToBuy := (s.ship.SpaceAvailable - fp.extraFuelRequired) / fp.cargo.VolumePerUnit
+	for {
+		cost := fp.cargo.PurchasePricePerUnit * unitsToBuy
+		if cost > cargoSpendLimit {
+			unitsToBuy -= 1
+		} else {
+			break
+		}
+	}
+
+	fp.unitsCargo = unitsToBuy
 	fp.flightCost += fp.cargo.PurchasePricePerUnit * fp.unitsCargo
 
 	fp.preflightTasks = append(fp.preflightTasks, func() error {
