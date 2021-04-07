@@ -100,6 +100,15 @@ func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusC
 		wg.Add(1)
 		requestsInProgress[req.Url] = wg
 		requestsInProgressLock.Unlock()
+
+		defer func() {
+			wg.Done()
+
+			requestsInProgressLock.Lock()
+			delete(requestsInProgress, req.Url)
+			requestsInProgressLock.Unlock()
+		}()
+
 	}
 
 	responseNotifier := make(chan *completedRequest)
@@ -130,11 +139,6 @@ func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusC
 	// at this point we can cache the response, since it's all ok
 	if allowCache {
 		responseCache.Set(req.Url, &completed.body, cPolicy.CacheDuration)
-		wg.Done()
-
-		requestsInProgressLock.Lock()
-		delete(requestsInProgress, req.Url)
-		requestsInProgressLock.Unlock()
 	}
 
 	// parse response and return error or nil
