@@ -148,6 +148,7 @@ func requestWorker() {
 
 		var ratelimitRetries int
 		var conflictRetries int
+		var internalServerErrorRetries int
 
 		for {
 			resp, body, errs := rq.request.Clone().EndBytes()
@@ -171,6 +172,14 @@ func requestWorker() {
 					continue
 				} // otherwise return error as normal
 
+			} else if resp.StatusCode == 500 {
+				internalServerErrorRetries += 1
+
+				if internalServerErrorRetries != 5 {
+					log.Info().Msg("got 500 internal server error on " + rq.request.Url + " - will retry in 10 seconds")
+					time.Sleep(time.Second * 10)
+					continue
+				} // otherwise return error as normal
 			}
 
 			if ratelimitRetries == 3 {
