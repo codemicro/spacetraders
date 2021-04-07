@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/parnurzeal/gorequest"
 	"github.com/patrickmn/go-cache"
+	"github.com/rs/zerolog/log"
 	coreLog "log"
 	"math/rand"
 	"net/http"
@@ -145,13 +146,14 @@ var ErrorFailedRatelimit = errors.New("stapi: unable to make request (too many r
 func requestWorker() {
 	for rq := range requestQueue {
 
-		var retries int
+		var ratelimitRetries int
+		var conflictRetries int
 
 		for {
 			resp, body, errs := rq.request.Clone().EndBytes()
 
 			if resp.StatusCode == 429 {
-				retries += 1
+				ratelimitRetries += 1
 
 				// wait for the retry after and a random duration between 0 and 5 seconds extra
 				retryAfter, _ := strconv.Atoi(resp.Header.Get("retry-after"))
@@ -160,9 +162,18 @@ func requestWorker() {
 				time.Sleep(time.Duration(n) * time.Second)
 
 				continue
+			} else if resp.StatusCode == 409 {
+				conflictRetries += 1
+
+				if conflictRetries != 3 {
+					log.Info().Msg("got 409 conflict on " + rq.request.Url)
+					time.Sleep(time.Second * 2)
+					continue
+				} // otherwise return error as normal
+
 			}
 
-			if retries == 3 {
+			if ratelimitRetries == 3 {
 				rq.responseNotifier <- &completedRequest{
 					response: resp,
 					body:     body,
