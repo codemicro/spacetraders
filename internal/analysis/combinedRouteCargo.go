@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"errors"
+	"fmt"
 	"github.com/codemicro/spacetraders/internal/stapi"
 	"github.com/codemicro/spacetraders/internal/tool"
 	"sort"
@@ -73,7 +74,7 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 					rankings = append(rankings, cargoDestination{
 						Cargo:       marketGood.Symbol,
 						Destination: marketLocation,
-						Value:       float64(currentLocationGood.PurchasePricePerUnit - marketGood.SellPricePerUnit) / float64(distancesTo[marketLocation]*marketGood.VolumePerUnit),
+						Value:       float64(marketGood.SellPricePerUnit - currentLocationGood.PurchasePricePerUnit) / float64(distancesTo[marketLocation]*marketGood.VolumePerUnit),
 					})
 
 				}
@@ -85,6 +86,8 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 	sort.Slice(rankings, func(i, j int) bool {
 		return rankings[i].Value > rankings[j].Value
 	})
+
+	fmt.Println(rankings)
 
 	if len(rankings) < 1 {
 		return nil, nil, errors.New("analysis: no suitable routes")
