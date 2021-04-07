@@ -15,6 +15,8 @@ type cargoDestination struct {
 	Value float64
 }
 
+var ErrorNoSuitableRoutes = errors.New("analysis: no suitable routes")
+
 func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *stapi.MarketplaceGood, error) {
 
 	systemLocations, err := stapi.GetSystemLocations(tool.SystemFromSymbol(currentLocationSymbol))
@@ -90,7 +92,7 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 	fmt.Println(rankings)
 
 	if len(rankings) < 1 {
-		return nil, nil, errors.New("analysis: no suitable routes")
+		return nil, nil, ErrorNoSuitableRoutes
 	}
 
 	selected := rankings[0]
@@ -109,6 +111,10 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 			selectedGood = good
 			break
 		}
+	}
+
+	if selectedLocation == nil || selectedGood == nil {
+		return nil, nil, ErrorNoSuitableRoutes
 	}
 
 	return selectedLocation, selectedGood, nil
