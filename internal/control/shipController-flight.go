@@ -18,7 +18,7 @@ func (s *ShipController) doFlight(fp *plannedFlight) error {
 		return err
 	}
 
-	s.log("departing...\nFlightplan ID: %s", flightplan.ID)
+	s.log("departing... flightplan ID: %s", flightplan.ID)
 
 	// TODO: we probably don't need to be retrieving the flightplan from the API every single time
 	sleepDuration := time.Minute

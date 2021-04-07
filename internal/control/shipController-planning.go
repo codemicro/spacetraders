@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/codemicro/spacetraders/internal/analysis"
 	"github.com/codemicro/spacetraders/internal/stapi"
+	"github.com/codemicro/spacetraders/internal/tool"
 	"strings"
 )
 
@@ -15,6 +16,7 @@ type plannedFlight struct {
 	unitsCargo        int
 	flightCost        int
 	distance          int
+	expectedProfit    int
 }
 
 var (
@@ -56,6 +58,39 @@ func (s *ShipController) planFlight(destinationString string) (*plannedFlight, e
 	return fp, nil
 }
 
+func (s *ShipController) planShortestFlight() (*plannedFlight, error) {
+	fp := new(plannedFlight)
+
+	currentLocation, err := stapi.GetLocationInfo(s.ship.Location)
+	if err != nil {
+		return nil, err
+	}
+
+	marketplace, err := stapi.GetMarketplaceAtLocation(currentLocation.Symbol)
+	if err != nil {
+		return nil, err
+	}
+
+	systemLocations, err := stapi.GetSystemLocations(tool.SystemFromSymbol(currentLocation.Symbol))
+	if err != nil {
+		return nil, err
+	}
+
+	destination := analysis.PickRoute(currentLocation, systemLocations, analysis.RoutingMethodShortest)
+
+	flightDistance := analysis.FindDistance(currentLocation, destination)
+
+	fp.destination = destination
+	fp.distance = flightDistance
+	fp.cargo = nil
+
+	if err = s.planFuel(fp, currentLocation, marketplace); err != nil {
+		return nil, err
+	}
+
+	return fp, nil
+}
+
 func (s *ShipController) planCargoFlight() (*plannedFlight, error) {
 
 	fp := new(plannedFlight)
@@ -70,29 +105,18 @@ func (s *ShipController) planCargoFlight() (*plannedFlight, error) {
 		return nil, err
 	}
 
-	destination, cargo, err := analysis.FindCombinedRouteAndCargo(s.ship.Location)
+	destination, cargo, unitsToBuy, expectedProfit, err := analysis.FindCombinedRouteAndCargo(s.ship.Location, s.ship.SpaceAvailable-fp.extraFuelRequired, cargoSpendLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	flightDistance := analysis.FindDistance(currentLocation, destination)
-
 	fp.destination = destination
-	fp.distance = flightDistance
+	fp.distance = analysis.FindDistance(currentLocation, destination)
 	fp.cargo = cargo
+	fp.expectedProfit = expectedProfit
 
 	if err = s.planFuel(fp, currentLocation, marketplace); err != nil {
 		return nil, err
-	}
-
-	unitsToBuy := (s.ship.SpaceAvailable - fp.extraFuelRequired) / fp.cargo.VolumePerUnit
-	for {
-		cost := fp.cargo.PurchasePricePerUnit * unitsToBuy
-		if cost > cargoSpendLimit {
-			unitsToBuy -= 1
-		} else {
-			break
-		}
 	}
 
 	fp.unitsCargo = unitsToBuy
