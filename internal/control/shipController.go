@@ -102,11 +102,6 @@ func (s *ShipController) updateShipInfo() error {
 func (s *ShipController) Start() {
 	s.log("online at %s (%d,%d)", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
 
-	//if s.shipType == ShipTypeTrader {
-	//	s.log("waiting for a minute for marketplace locations to update")
-	//	time.Sleep(time.Minute)
-	//}
-
 	for s.core.allowStartNewFlight {
 		var fp *plannedFlight
 
@@ -117,13 +112,15 @@ func (s *ShipController) Start() {
 				fp, err = s.planFlight(s.data)
 				if err != nil {
 					s.error(err)
+					s.core.stopNotifier <- s.ship.ID
 					return
 				}
 			} else {
 				s.log("already at target location %s (%d,%d), not moving", s.ship.Location, s.ship.XCoordinate, s.ship.YCoordinate)
 				time.Sleep(time.Second * time.Duration(rand.Intn(59))) // so we don't get a huge barrage of requests all at once
 				s.probeAction()
-				return // in case of an error returning
+				s.core.stopNotifier <- s.ship.ID
+				return // means that this thread can stop whenever it wants
 			}
 
 		} else {
@@ -132,6 +129,7 @@ func (s *ShipController) Start() {
 			fp, err = s.planCargoFlight()
 			if err != nil {
 				s.error(err)
+				s.core.stopNotifier <- s.ship.ID
 				return
 			}
 		}
@@ -142,10 +140,11 @@ func (s *ShipController) Start() {
 		}
 
 		s.log(
-			"flightplan created\nCost: %dcr\nExtra fuel: %d units\nCargo: %s\nDestination: %s (%s)\nDistance: %d",
+			"flightplan created\nCost: %dcr\nExtra fuel: %d units\nCargo: %s\nDeparture %s\nDestination: %s (%s)\nDistance: %d",
 			fp.flightCost,
 			fp.extraFuelRequired,
 			cargoString,
+			s.ship.Location,
 			fp.destination.Name,
 			fp.destination.Symbol,
 			fp.distance,
@@ -156,6 +155,7 @@ func (s *ShipController) Start() {
 
 		if err := s.doFlight(fp); err != nil {
 			s.error(err)
+			s.core.stopNotifier <- s.ship.ID
 			return
 		}
 
@@ -166,6 +166,7 @@ func (s *ShipController) Start() {
 			order, err := s.sellGood(fp.cargo.Symbol, fp.unitsCargo)
 			if err != nil {
 				s.error(err)
+				s.core.stopNotifier <- s.ship.ID
 				return
 			}
 
@@ -177,9 +178,13 @@ func (s *ShipController) Start() {
 		s.log("updating ship information")
 		if err := s.updateShipInfo(); err != nil {
 			s.error(err)
+			s.core.stopNotifier <- s.ship.ID
 			return
 		}
 
 		s.log("done")
 	}
+
+	s.core.stopNotifier <- s.ship.ID
+
 }

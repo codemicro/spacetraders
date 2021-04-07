@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -18,6 +19,7 @@ type Core struct {
 	user *stapi.User
 	allowStartNewFlight bool
 	sessionProfit int
+	stopNotifier chan string
 
 	logger zerolog.Logger
 
@@ -30,6 +32,7 @@ func NewCore(user *stapi.User) *Core {
 	c.user = user
 	c.logger = log.With().Str("area", "Core").Str("username", c.user.Username).Logger()
 	c.allowStartNewFlight = true
+	c.stopNotifier = make(chan string, 200)
 
 	go c.Start()
 
@@ -87,6 +90,8 @@ func (c *Core) ReportProfit(amount int) {
 }
 
 func (c *Core) Start() {
+	var runningShips []string
+
 	for _, ship := range c.user.Ships {
 
 		dbShip, found, err := db.GetShip(ship.ID)
@@ -148,6 +153,31 @@ func (c *Core) Start() {
 			}
 		}
 
+		runningShips = append(runningShips, ship.ID)
 		_ = NewShipController(ship, c, dbShip.Type, dbShip.Data)
+		time.Sleep(time.Second * 2) // spaces out requests a bit
 	}
+
+	c.log("all ships started")
+
+	for shipID := range c.stopNotifier {
+
+		var n int
+		for _, x := range runningShips {
+			if x != shipID {
+				runningShips[n] = x
+				n++
+			}
+		}
+		runningShips = runningShips[:n]
+
+		remaining := len(runningShips)
+		c.log("ship %s stopping - %d remaining", shipID, remaining)
+
+		if remaining == 0 {
+			c.log("all ships shutdown - bye!")
+			os.Exit(0)
+		}
+	}
+
 }
