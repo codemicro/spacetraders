@@ -143,9 +143,9 @@ func (s *ShipController) Start() {
 					if errors.Is(err, analysis.ErrorNoSuitableRoutes) {
 						attempts += 1
 
-						if attempts == 5 {
-							s.log("5 minutes have passed without being able to find a route. Moving to a new location")
-							fp, err = s.planShortestFlight()
+						if attempts == 2 {
+							s.log("2 minutes have passed without being able to find a route. Moving to a new location")
+							fp, err = s.planFlightWithMethod(analysis.RoutingMethod(rand.Intn(3))) // the random is in an effort to prevent any infinite looping
 							if err != nil {
 								s.error(err)
 								s.core.stopNotifier <- s.ship.ID

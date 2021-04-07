@@ -58,7 +58,7 @@ func (s *ShipController) planFlight(destinationString string) (*plannedFlight, e
 	return fp, nil
 }
 
-func (s *ShipController) planShortestFlight() (*plannedFlight, error) {
+func (s *ShipController) planFlightWithMethod(routingMethod analysis.RoutingMethod) (*plannedFlight, error) {
 	fp := new(plannedFlight)
 
 	currentLocation, err := stapi.GetLocationInfo(s.ship.Location)
@@ -76,7 +76,7 @@ func (s *ShipController) planShortestFlight() (*plannedFlight, error) {
 		return nil, err
 	}
 
-	destination := analysis.PickRoute(currentLocation, systemLocations, analysis.RoutingMethodShortest)
+	destination := analysis.PickRoute(currentLocation, systemLocations, routingMethod)
 
 	flightDistance := analysis.FindDistance(currentLocation, destination)
 
