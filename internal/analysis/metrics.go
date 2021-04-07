@@ -14,14 +14,15 @@ func FindDistance(from, to *stapi.Location) int {
 const fuelContingency = 2
 
 func CalculateFuelForFlight(from, to *stapi.Location) int {
+	return CalculateFuelForDistance(FindDistance(from, to), from.Type)
+}
 
-	dist := FindDistance(from, to)
-
+func CalculateFuelForDistance(dist int, departureType stapi.LocationType) int {
 	var rawFuelRequired int
 	{
 		d := int(math.Round(float64(dist) / 4))
 		e := 1
-		if from.Type == stapi.LocationTypePlanet {
+		if departureType == stapi.LocationTypePlanet {
 			e += 2
 		}
 		rawFuelRequired = d + e
