@@ -17,9 +17,11 @@ import (
 type Core struct {
 	user *stapi.User
 	allowStartNewFlight bool
+	sessionProfit int
 
 	logger zerolog.Logger
 
+	profitLock sync.Mutex
 	stdoutLock sync.Mutex
 }
 
@@ -75,6 +77,13 @@ func (c *Core) log(format string, a ...interface{}) {
 
 func (c *Core) error(err error) {
 	c.logger.Error().Err(err).Msg(tool.GetContext(2))
+}
+
+func (c *Core) ReportProfit(amount int) {
+	c.profitLock.Lock()
+	c.sessionProfit += amount
+	c.log("Received profit of %dcr, session profit now at %dcr", amount, c.sessionProfit)
+	c.profitLock.Unlock()
 }
 
 func (c *Core) Start() {

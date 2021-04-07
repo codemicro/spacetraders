@@ -169,7 +169,8 @@ func (s *ShipController) Start() {
 				return
 			}
 
-			s.log("sold for %dcr - profit of %dcr", order.Total, order.Total-fp.flightCost)
+			s.log("sold for %dcr", order.Total)
+			s.core.ReportProfit(order.Total-fp.flightCost)
 
 		}
 
