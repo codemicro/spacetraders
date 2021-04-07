@@ -10,18 +10,19 @@ import (
 )
 
 type cargoDestination struct {
-	Cargo string
-	Destination string
-	Value float64
+	Cargo         string
+	Destination   string
+	Value         int
+	NumberOfUnits int
 }
 
 var ErrorNoSuitableRoutes = errors.New("analysis: no suitable routes")
 
-func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *stapi.MarketplaceGood, error) {
+func FindCombinedRouteAndCargo(currentLocationSymbol string, cargoCapacity, spendLimit int) (*stapi.Location, *stapi.MarketplaceGood, int, int, error) {
 
 	systemLocations, err := stapi.GetSystemLocations(tool.SystemFromSymbol(currentLocationSymbol))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	var currentLocation *stapi.Location
@@ -40,6 +41,10 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 		systemLocations = systemLocations[:n]
 	}
 
+	if currentLocation == nil {
+		return nil, nil, 0, 0, errors.New("could not locate " + currentLocationSymbol)
+	}
+
 	distancesTo := make(map[string]int)
 	for _, location := range systemLocations {
 		distancesTo[location.Symbol] = FindDistance(currentLocation, location)
@@ -47,7 +52,7 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 
 	marketplaces, err := GetAllMarketplaces()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, 0, err
 	}
 
 	var rankings []cargoDestination
@@ -56,9 +61,18 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 	{
 		curr, err := stapi.GetMarketplaceAtLocation(currentLocationSymbol)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, 0, 0, err
 		}
 		currentLocationGoods = curr
+	}
+
+	var currentFuelCost int
+	// if there is no fuel at the current place, it will ignore the minimum profit required
+	for _, x := range currentLocationGoods {
+		if strings.EqualFold(x.Symbol, "FUEL") {
+			currentFuelCost = x.PurchasePricePerUnit
+			break
+		}
 	}
 
 	for _, currentLocationGood := range currentLocationGoods {
@@ -73,10 +87,31 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 						continue
 					}
 
+					requiredFuel := CalculateFuelForDistance(distancesTo[marketLocation], currentLocation.Type)
+
+					profitPerUnit := marketGood.SellPricePerUnit - currentLocationGood.PurchasePricePerUnit
+
+					unitsToBuy := (cargoCapacity - requiredFuel) / marketGood.VolumePerUnit
+					for {
+						cost := currentLocationGood.PurchasePricePerUnit * unitsToBuy
+						if cost > spendLimit {
+							unitsToBuy -= 1
+						} else {
+							break
+						}
+					}
+
+					totalProfit := profitPerUnit * unitsToBuy
+
+					if totalProfit < requiredFuel*currentFuelCost {
+						continue
+					}
+
 					rankings = append(rankings, cargoDestination{
-						Cargo:       marketGood.Symbol,
-						Destination: marketLocation,
-						Value:       float64(marketGood.SellPricePerUnit - currentLocationGood.PurchasePricePerUnit) / float64(distancesTo[marketLocation]*marketGood.VolumePerUnit),
+						Cargo:         marketGood.Symbol,
+						Destination:   marketLocation,
+						Value:         totalProfit,
+						NumberOfUnits: unitsToBuy,
 					})
 
 				}
@@ -92,7 +127,7 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 	fmt.Println(rankings)
 
 	if len(rankings) < 1 {
-		return nil, nil, ErrorNoSuitableRoutes
+		return nil, nil, 0, 0, ErrorNoSuitableRoutes
 	}
 
 	selected := rankings[0]
@@ -114,9 +149,9 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string) (*stapi.Location, *
 	}
 
 	if selectedLocation == nil || selectedGood == nil {
-		return nil, nil, ErrorNoSuitableRoutes
+		return nil, nil, 0, 0, ErrorNoSuitableRoutes
 	}
 
-	return selectedLocation, selectedGood, nil
+	return selectedLocation, selectedGood, selected.NumberOfUnits, selected.Value, nil
 
 }
