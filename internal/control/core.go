@@ -75,7 +75,7 @@ func (c *Core) WriteToStdout(format string, a ...interface{}) {
 func (c *Core) log(format string, a ...interface{}) {
 	prefix := c.user.Username + ": "
 	x := strings.ReplaceAll(fmt.Sprintf(format, a...), "\n", "\n"+strings.Repeat(" ", len(prefix)))
-	c.WriteToStdout("%s%s\n", aurora.Green(prefix), x)
+	c.WriteToStdout("%s%s\n", aurora.BrightGreen(prefix), x)
 }
 
 func (c *Core) error(err error) {
