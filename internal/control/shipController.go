@@ -50,7 +50,13 @@ func (s *ShipController) log(format string, a ...interface{}) {
 		format = "(PROBE) " + format
 	}
 	x := strings.ReplaceAll(fmt.Sprintf(format, a...), "\n", "\n"+strings.Repeat(" ", len(prefix)))
-	s.core.WriteToStdout("%s%s\n", aurora.Yellow(prefix), x)
+	var highlighted string
+	if s.shipType == ShipTypeProbe {
+		highlighted = aurora.BrightBlue(prefix).String()
+	} else {
+		highlighted = aurora.Yellow(prefix).String()
+	}
+	s.core.WriteToStdout("%s%s\n", highlighted, x)
 }
 
 func (s *ShipController) error(err error) {
