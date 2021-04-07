@@ -25,7 +25,7 @@ var (
 	ErrorCannotPickCargo = errors.New("shipController: could not choose a cargo (this is probably a programming error")
 )
 
-const cargoSpendLimit = 10000
+const cargoSpendLimit = 12000
 
 func (s *ShipController) planFlight(destinationString string) (*plannedFlight, error) {
 	fp := new(plannedFlight)
