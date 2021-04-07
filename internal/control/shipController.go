@@ -1,7 +1,9 @@
 package control
 
 import (
+	"errors"
 	"fmt"
+	"github.com/codemicro/spacetraders/internal/analysis"
 	"github.com/codemicro/spacetraders/internal/stapi"
 	"github.com/codemicro/spacetraders/internal/tool"
 	"github.com/imdario/mergo"
@@ -126,12 +128,44 @@ func (s *ShipController) Start() {
 		} else {
 			var err error
 			s.log("planning cargo flight")
-			fp, err = s.planCargoFlight()
-			if err != nil {
-				s.error(err)
-				s.core.stopNotifier <- s.ship.ID
-				return
+
+			var attempts int
+			for {
+
+				if !s.core.allowStartNewFlight {
+					// If we've been sleeping and a shutdown has been requested, this needs to stop
+					s.core.stopNotifier <- s.ship.ID
+					return
+				}
+
+				fp, err = s.planCargoFlight()
+				if err != nil {
+					if errors.Is(err, analysis.ErrorNoSuitableRoutes) {
+						attempts += 1
+
+						if attempts == 5 {
+							s.log("5 minutes have passed without being able to find a route. Moving to a new location")
+							fp, err = s.planShortestFlight()
+							if err != nil {
+								s.error(err)
+								s.core.stopNotifier <- s.ship.ID
+								return
+							}
+							break
+						}
+
+						s.log("did not find any suitable routes at %s, waiting one minute and trying again", s.ship.Location)
+						time.Sleep(time.Minute)
+						continue
+					}
+					s.error(err)
+					s.core.stopNotifier <- s.ship.ID
+					return
+				} else {
+					break
+				}
 			}
+
 		}
 
 		cargoString := "none"
@@ -149,9 +183,6 @@ func (s *ShipController) Start() {
 			fp.destination.Symbol,
 			fp.distance,
 		)
-
-		s.log("waiting 5 seconds for cancellation...")
-		time.Sleep(time.Second * 5)
 
 		if err := s.doFlight(fp); err != nil {
 			s.error(err)
@@ -173,6 +204,8 @@ func (s *ShipController) Start() {
 			s.log("sold for %dcr", order.Total)
 			s.core.ReportProfit(order.Total-fp.flightCost)
 
+		} else {
+			s.core.ReportProfit(-fp.flightCost)
 		}
 
 		s.log("updating ship information")
