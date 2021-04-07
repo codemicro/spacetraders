@@ -7,6 +7,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"time"
 )
 
 var Conn *gorm.DB
@@ -92,4 +93,8 @@ func GetLatestDataForLocation(location string) (*Market, bool, error) {
 func GetMarketLocations() ([]string, error) {
 	var locations []string
 	return locations, Conn.Model(&Market{}).Distinct().Pluck("location", &locations).Error
+}
+
+func DeleteMarketDataOlderThan(t time.Time) error {
+	return Conn.Unscoped().Where("created_at < ?", t).Delete(&Market{}).Error
 }
