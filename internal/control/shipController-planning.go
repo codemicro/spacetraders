@@ -105,7 +105,7 @@ func (s *ShipController) planCargoFlight() (*plannedFlight, error) {
 		return nil, err
 	}
 
-	destination, cargo, unitsToBuy, expectedProfit, err := analysis.FindCombinedRouteAndCargo(s.ship.Location, s.ship.SpaceAvailable-fp.extraFuelRequired, cargoSpendLimit)
+	destination, cargo, unitsToBuy, expectedProfit, err := analysis.FindCombinedRouteAndCargo(s.ship.Location, s.ship.SpaceAvailable-fp.extraFuelRequired, cargoSpendLimit, s.ship.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (s *ShipController) planRoute(fp *plannedFlight, currentLocation *stapi.Loc
 }
 
 func (s *ShipController) planFuel(fp *plannedFlight, currentLocation *stapi.Location, marketplace []*stapi.MarketplaceGood) error {
-	journeyFuel := analysis.CalculateFuelForFlight(currentLocation, fp.destination)
+	journeyFuel := analysis.CalculateFuelForFlight(currentLocation, fp.destination, s.ship.Type, s.ship.MaxCargo)
 	extraFuelRequired := journeyFuel - s.ship.GetCurrentFuel()
 
 	if extraFuelRequired > 0 {

@@ -17,7 +17,7 @@ type cargoDestination struct {
 
 var ErrorNoSuitableRoutes = errors.New("analysis: no suitable routes")
 
-func FindCombinedRouteAndCargo(currentLocationSymbol string, cargoCapacity, spendLimit int) (*stapi.Location, *stapi.MarketplaceGood, int, int, error) {
+func FindCombinedRouteAndCargo(currentLocationSymbol string, cargoCapacity, spendLimit int, shipType string) (*stapi.Location, *stapi.MarketplaceGood, int, int, error) {
 
 	systemLocations, err := stapi.GetSystemLocations(tool.SystemFromSymbol(currentLocationSymbol))
 	if err != nil {
@@ -86,7 +86,7 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string, cargoCapacity, spen
 						continue
 					}
 
-					requiredFuel := CalculateFuelForDistance(distancesTo[marketLocation], currentLocation.Type)
+					requiredFuel := CalculateFuelForDistance(distancesTo[marketLocation], currentLocation.Type, shipType, cargoCapacity)
 
 					profitPerUnit := marketGood.SellPricePerUnit - currentLocationGood.PurchasePricePerUnit
 
