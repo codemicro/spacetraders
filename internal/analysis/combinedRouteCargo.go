@@ -124,8 +124,6 @@ func FindCombinedRouteAndCargo(currentLocationSymbol string, cargoCapacity, spen
 		return rankings[i].Value > rankings[j].Value
 	})
 
-	fmt.Println(rankings)
-
 	if len(rankings) < 1 {
 		return nil, nil, 0, 0, ErrorNoSuitableRoutes
 	}

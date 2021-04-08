@@ -174,8 +174,9 @@ func (s *ShipController) Start() {
 		}
 
 		s.log(
-			"flightplan created\nCost: %dcr\nExtra fuel: %d units\nCargo: %s\nDeparture %s\nDestination: %s (%s)\nDistance: %d",
+			"flightplan created\nCost: %dcr\nPredicted profit: %dcr\nExtra fuel: %d units\nCargo: %s\nDeparture %s\nDestination: %s (%s)\nDistance: %d",
 			fp.flightCost,
+			fp.expectedProfit,
 			fp.extraFuelRequired,
 			cargoString,
 			s.ship.Location,
