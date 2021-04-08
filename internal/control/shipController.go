@@ -47,7 +47,7 @@ func NewShipController(ship *stapi.Ship, core *Core, shipType int, data string) 
 }
 
 func (s *ShipController) log(format string, a ...interface{}) {
-	prefix := s.ship.ID + ": "
+	prefix := s.ship.Type + " " + s.ship.ID[:len(s.ship.ID)-6] + ": "
 	if s.shipType == ShipTypeProbe {
 		format = "(PROBE) " + format
 	}
@@ -55,6 +55,10 @@ func (s *ShipController) log(format string, a ...interface{}) {
 	var highlighted string
 	if s.shipType == ShipTypeProbe {
 		highlighted = aurora.BrightBlue(prefix).String()
+	} else if s.ship.Class == "MK-II" {
+		highlighted = aurora.BrightMagenta(prefix).String()
+	} else if s.ship.Class == "MK-III" {
+		highlighted = aurora.BrightGreen(prefix).String()
 	} else {
 		highlighted = aurora.Yellow(prefix).String()
 	}
