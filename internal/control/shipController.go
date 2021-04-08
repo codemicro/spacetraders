@@ -47,7 +47,7 @@ func NewShipController(ship *stapi.Ship, core *Core, shipType int, data string) 
 }
 
 func (s *ShipController) log(format string, a ...interface{}) {
-	prefix := s.ship.Type + " " + s.ship.ID[:len(s.ship.ID)-6] + ": "
+	prefix := s.ship.Type + " " + s.ship.ID[len(s.ship.ID)-6:] + ": "
 	if s.shipType == ShipTypeProbe {
 		format = "(PROBE) " + format
 	}
@@ -66,7 +66,7 @@ func (s *ShipController) log(format string, a ...interface{}) {
 }
 
 func (s *ShipController) error(err error) {
-	s.log("ERROR: %s", err.Error())
+	s.log("%s ERROR: %s", s.ship.ID, err.Error())
 	s.logger.Error().Err(err).Msg(tool.GetContext(2))
 }
 
