@@ -54,12 +54,12 @@ func NewCore(user *stapi.User) *Core {
 
 	go func(){
 		for {
-			time.Sleep(time.Minute)
 			err := db.DeleteMarketDataOlderThan(time.Now().Add(-10 * time.Minute))
 			if err != nil {
 				c.error(err)
 				return
 			}
+			time.Sleep(time.Minute)
 		}
 	}()
 
