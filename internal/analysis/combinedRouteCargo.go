@@ -2,7 +2,6 @@ package analysis
 
 import (
 	"errors"
-	"fmt"
 	"github.com/codemicro/spacetraders/internal/stapi"
 	"github.com/codemicro/spacetraders/internal/tool"
 	"sort"
