@@ -55,7 +55,7 @@ func (s *ShipController) doFlight(fp *plannedFlight) error {
 
 		}
 
-		s.log("%sen route - %.2f%% complete, %ds remaining", ferryString, percentageComplete, flightplan.FlightTimeRemaining)
+		s.log("%sen route - %.2f%% complete, %.0fs remaining", ferryString, percentageComplete, time.Until(*flightplan.ArrivesAt).Seconds())
 		time.Sleep(sleepDuration)
 	}
 
