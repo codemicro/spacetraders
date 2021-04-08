@@ -25,6 +25,11 @@ func (s *ShipController) doFlight(fp *plannedFlight) error {
 	totalFlightDuration := flightplan.ArrivesAt.Sub(*flightplan.CreatedAt)
 	for {
 
+		var ferryString string
+		if fp.cargo == nil {
+			ferryString = "(FERRY) "
+		}
+
 		flightplan, err = s.core.user.GetFlightplan(flightplan.ID)
 		if err != nil {
 			return err
@@ -42,11 +47,11 @@ func (s *ShipController) doFlight(fp *plannedFlight) error {
 
 		if flightplan.ArrivesAt.Before(time.Now()) {
 			time.Sleep(time.Until(*flightplan.ArrivesAt) + time.Second)
-			s.log("arrived at %s", flightplan.ArrivesAt.Format(time.Kitchen))
+			s.log("%sarrived at %s", ferryString, flightplan.ArrivesAt.Format(time.Kitchen))
 			break
 		}
 
-		s.log("en route - %.2f%% complete, %ds remaining", percentageComplete, flightplan.FlightTimeRemaining)
+		s.log("%sen route - %.2f%% complete, %ds remaining", ferryString, percentageComplete, flightplan.FlightTimeRemaining)
 		time.Sleep(sleepDuration)
 	}
 
