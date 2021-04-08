@@ -89,6 +89,52 @@ func (c *Core) ReportProfit(amount int) {
 	c.profitLock.Unlock()
 }
 
+func (c *Core) determineNewShipType(ship *stapi.Ship) (int, string, error) {
+	numTraders, err := db.CountShipsOfType(ShipTypeTrader)
+	if err != nil {
+		return 0, "", err
+	}
+	numProbes, err := db.CountShipsOfType(ShipTypeProbe)
+	if err != nil {
+		return 0, "", err
+	}
+
+	var numberOfLocations int
+	systemLocations, err := stapi.GetSystemLocations(tool.SystemFromSymbol(ship.Location))
+	if err != nil {
+		return 0, "", err
+	}
+	numberOfLocations = len(systemLocations)
+
+	{
+		for _, x := range systemLocations {
+			if x.Type == stapi.LocationTypeWormhole {
+				numberOfLocations -= 1 // this prevents probe ships being sent to wormholes
+			}
+		}
+	}
+
+	targetShipType := ShipTypeTrader
+	var targetShipData string
+	if numProbes < numTraders && numProbes < numberOfLocations {
+		targetShipType = ShipTypeProbe
+		{
+			currentProbeLocations, err := db.GetShipDataByType(ShipTypeProbe)
+			if err !=  nil {
+				return 0, "", err
+			}
+			for _, location := range systemLocations {
+				if !tool.IsStringInSlice(location.Symbol, currentProbeLocations) && location.Type != stapi.LocationTypeWormhole {
+					targetShipData = location.Symbol
+					break
+				}
+			}
+		}
+	}
+
+	return targetShipType, targetShipData, nil
+}
+
 func (c *Core) Start() {
 	var runningShips []string
 
@@ -97,54 +143,16 @@ func (c *Core) Start() {
 		dbShip, found, err := db.GetShip(ship.ID)
 		if err != nil {
 			c.error(err)
-			return
+			c.TriggerStop()
+			break
 		}
 		if !found {
 
-			numTraders, err := db.CountShipsOfType(ShipTypeTrader)
+			targetShipType, targetShipData, err := c.determineNewShipType(ship)
 			if err != nil {
 				c.error(err)
-				return
-			}
-			numProbes, err := db.CountShipsOfType(ShipTypeProbe)
-			if err != nil {
-				c.error(err)
-				return
-			}
-
-			var numberOfLocations int
-			systemLocations, err := stapi.GetSystemLocations(tool.SystemFromSymbol(ship.Location))
-			if err != nil {
-				c.error(err)
-				return
-			}
-			numberOfLocations = len(systemLocations)
-
-			{
-				for _, x := range systemLocations {
-					if x.Type == stapi.LocationTypeWormhole {
-						numberOfLocations -= 1 // this prevents probe ships being sent to wormholes
-					}
-				}
-			}
-
-			targetShipType := ShipTypeTrader
-			var targetShipData string
-			if numProbes < numTraders && numProbes < numberOfLocations {
-				targetShipType = ShipTypeProbe
-				{
-					currentProbeLocations, err := db.GetShipDataByType(ShipTypeProbe)
-					if err !=  nil {
-						c.error(err)
-						return
-					}
-					for _, location := range systemLocations {
-						if !tool.IsStringInSlice(location.Symbol, currentProbeLocations) && location.Type != stapi.LocationTypeWormhole {
-							targetShipData = location.Symbol
-							break
-						}
-					}
-				}
+				c.TriggerStop()
+				break
 			}
 
 			c.log("found unrecognised ship %s, categorising as %d", ship.ID, targetShipType)
@@ -157,7 +165,8 @@ func (c *Core) Start() {
 			err = dbShip.Create()
 			if err != nil {
 				c.error(err)
-				return
+				c.TriggerStop()
+				break
 			}
 		}
 
@@ -166,7 +175,10 @@ func (c *Core) Start() {
 		time.Sleep(time.Second * 2) // spaces out requests a bit
 	}
 
-	c.log("all ships started")
+
+	if len(runningShips) == len(c.user.Ships) {
+		c.log("all ships started")
+	}
 
 	for shipID := range c.stopNotifier {
 
