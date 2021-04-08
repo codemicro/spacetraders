@@ -66,6 +66,7 @@ func (s *ShipController) log(format string, a ...interface{}) {
 }
 
 func (s *ShipController) error(err error) {
+	s.log("ERROR: %s", err.Error())
 	s.logger.Error().Err(err).Msg(tool.GetContext(2))
 }
 
