@@ -179,7 +179,7 @@ func requestWorker() {
 			} else if resp.StatusCode == 500 {
 				internalServerErrorRetries += 1
 
-				if internalServerErrorRetries != 5 {
+				if internalServerErrorRetries != 10 {
 					log.Info().Msg("got 500 internal server error on " + rq.request.Url + " - will retry in 10 seconds")
 					time.Sleep(time.Second * 10)
 					continue
