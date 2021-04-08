@@ -44,8 +44,7 @@ func NewCore(user *stapi.User) *Core {
 				c.error(err)
 			} else {
 				if len(fcont) != 0 {
-					c.allowStartNewFlight = false
-					c.log("stopping all new flights...")
+					c.TriggerStop()
 					return
 				}
 			}
@@ -133,6 +132,11 @@ func (c *Core) determineNewShipType(ship *stapi.Ship) (int, string, error) {
 	}
 
 	return targetShipType, targetShipData, nil
+}
+
+func (c *Core) TriggerStop() {
+	c.allowStartNewFlight = false
+	c.log("stopping all new flights...")
 }
 
 func (c *Core) Start() {
