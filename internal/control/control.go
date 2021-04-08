@@ -5,16 +5,16 @@ import (
 	"github.com/codemicro/spacetraders/internal/stapi"
 )
 
-func Start() error {
+func Start() (func(), error) {
 
 	// get user and ships
 	userInfo, err := stapi.GetUserInfo(config.C.Username)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_ = NewCore(userInfo)
+	core := NewCore(userInfo)
 
-	return nil
+	return core.TriggerStop, nil
 
 }
