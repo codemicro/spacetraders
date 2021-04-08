@@ -20,7 +20,6 @@ func (s *ShipController) doFlight(fp *plannedFlight) error {
 
 	s.log("departing... flightplan ID: %s", flightplan.ID)
 
-	// TODO: we probably don't need to be retrieving the flightplan from the API every single time
 	sleepDuration := time.Minute
 	totalFlightDuration := flightplan.ArrivesAt.Sub(*flightplan.CreatedAt)
 	for {
@@ -28,11 +27,6 @@ func (s *ShipController) doFlight(fp *plannedFlight) error {
 		var ferryString string
 		if fp.cargo == nil {
 			ferryString = "(FERRY) "
-		}
-
-		flightplan, err = s.core.user.GetFlightplan(flightplan.ID)
-		if err != nil {
-			return err
 		}
 
 		if ut := time.Until(*flightplan.ArrivesAt); ut < sleepDuration {
@@ -46,9 +40,19 @@ func (s *ShipController) doFlight(fp *plannedFlight) error {
 		}
 
 		if flightplan.ArrivesAt.Before(time.Now()) {
-			time.Sleep(time.Until(*flightplan.ArrivesAt) + time.Second)
-			s.log("%sarrived at %s", ferryString, flightplan.ArrivesAt.Format(time.Kitchen))
-			break
+
+			time.Sleep(time.Second)
+
+			flightplan, err = s.core.user.GetFlightplan(flightplan.ID)
+			if err != nil {
+				return err
+			}
+
+			if flightplan.FlightTimeRemaining == 0 {
+				s.log("%sarrived at %s", ferryString, flightplan.ArrivesAt.Format(time.Kitchen))
+				break
+			}
+
 		}
 
 		s.log("%sen route - %.2f%% complete, %ds remaining", ferryString, percentageComplete, flightplan.FlightTimeRemaining)
