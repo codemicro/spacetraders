@@ -2,6 +2,7 @@ package control
 
 import (
 	"errors"
+	"fmt"
 	"github.com/codemicro/spacetraders/internal/analysis"
 	"github.com/codemicro/spacetraders/internal/stapi"
 	"github.com/codemicro/spacetraders/internal/tool"
@@ -25,7 +26,18 @@ var (
 	ErrorCannotPickCargo = errors.New("shipController: could not choose a cargo (this is probably a programming error")
 )
 
-const cargoSpendLimit = 9000
+func getCargoSpendLimit(cargoCapacity int) int {
+	if cargoCapacity <= 100 {
+		return 7000
+	} else if cargoCapacity == 300 {
+		return 9000
+	} else if cargoCapacity == 1000 {
+		return 15000
+	}
+	fmt.Printf("Cargo capacity %d unaccounted for!\n", cargoCapacity)
+	return 9000
+}
+
 
 func (s *ShipController) planFlight(destinationString string) (*plannedFlight, error) {
 	fp := new(plannedFlight)
@@ -105,7 +117,7 @@ func (s *ShipController) planCargoFlight() (*plannedFlight, error) {
 		return nil, err
 	}
 
-	destination, cargo, unitsToBuy, expectedProfit, err := analysis.FindCombinedRouteAndCargo(s.ship.Location, s.ship.SpaceAvailable-fp.extraFuelRequired, cargoSpendLimit, s.ship.Type)
+	destination, cargo, unitsToBuy, expectedProfit, err := analysis.FindCombinedRouteAndCargo(s.ship.Location, s.ship.SpaceAvailable-fp.extraFuelRequired, getCargoSpendLimit(s.ship.MaxCargo), s.ship.Type)
 	if err != nil {
 		return nil, err
 	}
