@@ -18,6 +18,7 @@ func (e *ErrorResponse) Error() string {
 
 // Known error codes
 const (
+	ErrorCodeGoodNotInMarketplace = 2001
 	ErrorCodeInsufficientFunds = 2004
 	ErrorCodeNotFound = 404
 )
