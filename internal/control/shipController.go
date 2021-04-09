@@ -80,7 +80,7 @@ func (s *ShipController) buyGood(good string, quantity int) error {
 			quantity -= toProcess
 		}
 
-		newShip, err := s.core.user.SubmitPurchaseOrder(s.ship.ID, good, quantity)
+		newShip, err := s.core.user.SubmitPurchaseOrder(s.ship.ID, good, toProcess)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func (s *ShipController) sellGood(good string, quantity int) (*stapi.Order, erro
 			quantity -= toProcess
 		}
 
-		newShip, order, err := s.core.user.SubmitSellOrder(s.ship.ID, good, quantity)
+		newShip, order, err := s.core.user.SubmitSellOrder(s.ship.ID, good, toProcess)
 		if err != nil {
 			return nil, err
 		}
