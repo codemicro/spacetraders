@@ -77,7 +77,7 @@ func GetSystemLocations(system string) ([]*Location, error) {
 		&ts,
 		func(i int) bool { return i == 200 },
 		map[int]error{404: ErrorSystemNotFound},
-		cachePolicy{ true, time.Minute * 10 },
+		cachePolicy{true, time.Minute * 10},
 	)
 
 	return ts.Locations, err
@@ -94,7 +94,7 @@ func GetLocationInfo(location string) (*Location, error) {
 		&ts,
 		func(i int) bool { return i == 200 },
 		map[int]error{404: ErrorLocationNotFound},
-		cachePolicy{ true, time.Minute * 10 },
+		cachePolicy{true, time.Minute * 10},
 	)
 
 	return ts.Location, err

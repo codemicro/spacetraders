@@ -9,9 +9,9 @@ import (
 )
 
 type config struct {
-	Token     string
-	Username  string
-	DebugMode bool
+	Token        string
+	Username     string
+	DebugMode    bool
 	DatabaseFile string
 }
 
@@ -19,7 +19,7 @@ var C config
 
 const (
 	configFile = "config.json"
-	logFile = "general.log"
+	logFile    = "general.log"
 )
 
 func init() {

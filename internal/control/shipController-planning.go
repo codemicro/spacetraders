@@ -38,7 +38,6 @@ func getCargoSpendLimit(cargoCapacity int) int {
 	return 9000
 }
 
-
 func (s *ShipController) planFlight(destinationString string) (*plannedFlight, error) {
 	fp := new(plannedFlight)
 

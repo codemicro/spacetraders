@@ -59,16 +59,16 @@ type completedRequest struct {
 }
 
 type cachePolicy struct {
-	Allow bool
+	Allow         bool
 	CacheDuration time.Duration
 }
 
 var (
-	requestQueue = make(chan trackedRequest, 1024)
-	responseCache = cache.New(time.Minute * 5, time.Minute * 5)
+	requestQueue  = make(chan trackedRequest, 1024)
+	responseCache = cache.New(time.Minute*5, time.Minute*5)
 
 	requestsInProgressLock sync.RWMutex
-	requestsInProgress = make(map[string]*sync.WaitGroup)
+	requestsInProgress     = make(map[string]*sync.WaitGroup)
 )
 
 func orchestrateRequest(req *gorequest.SuperAgent, output interface{}, isStatusCodeOk func(int) bool, errorsByStatusCode map[int]error, cPolicy cachePolicy) error {

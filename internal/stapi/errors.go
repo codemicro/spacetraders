@@ -9,7 +9,7 @@ import (
 
 type ErrorResponse struct {
 	Message string `json:"message"`
-	Code int `json:"code"`
+	Code    int    `json:"code"`
 }
 
 func (e *ErrorResponse) Error() string {
@@ -19,12 +19,14 @@ func (e *ErrorResponse) Error() string {
 // Known error codes
 const (
 	ErrorCodeGoodNotInMarketplace = 2001
-	ErrorCodeInsufficientFunds = 2004
-	ErrorCodeNotFound = 404
+	ErrorCodeInsufficientFunds    = 2004
+	ErrorCodeNotFound             = 404
 )
 
 func newAPIError(httpStatusCode int, responseBody []byte) error {
-	ts := struct {EF *ErrorResponse `json:"error"`}{}
+	ts := struct {
+		EF *ErrorResponse `json:"error"`
+	}{}
 	if err := json.Unmarshal(responseBody, &ts); err != nil {
 		// TODO: should this return the JSON error or this other error?
 		return err

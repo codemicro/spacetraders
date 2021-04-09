@@ -16,10 +16,10 @@ import (
 )
 
 type Core struct {
-	user *stapi.User
+	user                *stapi.User
 	allowStartNewFlight bool
-	sessionProfit int
-	stopNotifier chan string
+	sessionProfit       int
+	stopNotifier        chan string
 
 	logger zerolog.Logger
 
@@ -51,7 +51,7 @@ func NewCore(user *stapi.User) *Core {
 		}
 	}()
 
-	go func(){
+	go func() {
 		for {
 			err := db.DeleteMarketDataOlderThan(time.Now().Add(-10 * time.Minute))
 			if err != nil {
@@ -119,7 +119,7 @@ func (c *Core) determineNewShipType(ship *stapi.Ship) (int, string, error) {
 		targetShipType = ShipTypeProbe
 		{
 			currentProbeLocations, err := db.GetShipDataByType(ShipTypeProbe)
-			if err !=  nil {
+			if err != nil {
 				return 0, "", err
 			}
 			for _, location := range systemLocations {
@@ -178,7 +178,6 @@ func (c *Core) Start() {
 		_ = NewShipController(ship, c, dbShip.Type, dbShip.Data)
 		time.Sleep(time.Second * 2) // spaces out requests a bit
 	}
-
 
 	if len(runningShips) == len(c.user.Ships) {
 		c.log("all ships started")

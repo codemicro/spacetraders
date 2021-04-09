@@ -27,7 +27,7 @@ type ShipController struct {
 	logger zerolog.Logger
 
 	shipType int
-	data string
+	data     string
 }
 
 func NewShipController(ship *stapi.Ship, core *Core, shipType int, data string) *ShipController {
@@ -242,7 +242,7 @@ func (s *ShipController) Start() {
 			}
 
 			s.log("sold for %dcr", order.Total)
-			s.core.ReportProfit(order.Total-fp.flightCost)
+			s.core.ReportProfit(order.Total - fp.flightCost)
 
 		} else {
 			s.core.ReportProfit(-fp.flightCost)
