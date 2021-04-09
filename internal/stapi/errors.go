@@ -23,7 +23,7 @@ const (
 )
 
 func newAPIError(httpStatusCode int, responseBody []byte) error {
-	ts := struct {ef *ErrorResponse `json:"error"`}{}
+	ts := struct {EF *ErrorResponse `json:"error"`}{}
 	if err := json.Unmarshal(responseBody, &ts); err != nil {
 		// TODO: should this return the JSON error or this other error?
 		return err
@@ -32,5 +32,5 @@ func newAPIError(httpStatusCode int, responseBody []byte) error {
 		//	Code:    httpStatusCode,
 		//}
 	}
-	return ts.ef
+	return ts.EF
 }
