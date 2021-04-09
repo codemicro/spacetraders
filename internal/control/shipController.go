@@ -6,7 +6,6 @@ import (
 	"github.com/codemicro/spacetraders/internal/analysis"
 	"github.com/codemicro/spacetraders/internal/stapi"
 	"github.com/codemicro/spacetraders/internal/tool"
-	"github.com/imdario/mergo"
 	"github.com/logrusorgru/aurora"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -71,22 +70,57 @@ func (s *ShipController) error(err error) {
 }
 
 func (s *ShipController) buyGood(good string, quantity int) error {
-	newShip, err := s.core.user.SubmitPurchaseOrder(s.ship.ID, good, quantity)
-	if err != nil {
-		return err
+
+	for quantity > 0 {
+		toProcess := 300
+		if quantity < toProcess {
+			toProcess = quantity
+			quantity = 0
+		} else {
+			quantity -= toProcess
+		}
+
+		newShip, err := s.core.user.SubmitPurchaseOrder(s.ship.ID, good, quantity)
+		if err != nil {
+			return err
+		}
+
+		*s.ship = *newShip // I really hope this works how I expect it to
 	}
-	return mergo.Merge(s.ship, newShip)
+
+	return nil
 }
 
 func (s *ShipController) sellGood(good string, quantity int) (*stapi.Order, error) {
-	newShip, order, err := s.core.user.SubmitSellOrder(s.ship.ID, good, quantity)
-	if err != nil {
-		return nil, err
+
+	var masterOrder *stapi.Order
+
+	for quantity > 0 {
+		toProcess := 300
+		if quantity < toProcess {
+			toProcess = quantity
+			quantity = 0
+		} else {
+			quantity -= toProcess
+		}
+
+		newShip, order, err := s.core.user.SubmitSellOrder(s.ship.ID, good, quantity)
+		if err != nil {
+			return nil, err
+		}
+
+		if masterOrder == nil {
+			masterOrder = order
+		} else {
+			masterOrder.Total += order.Total
+			masterOrder.Quantity += order.Quantity
+		}
+
+		*s.ship = *newShip // I really hope this works how I expect it to
+
 	}
-	if err = mergo.Merge(s.ship, newShip); err != nil { // TODO: check - is this actually doing the correct thing?
-		return nil, err
-	}
-	return order, nil
+
+	return masterOrder, nil
 }
 
 func (s *ShipController) refuel(amount int) error {
