@@ -103,6 +103,24 @@ func (u *User) SubmitSellOrder(shipID, good string, quantity int) (*Ship, *Order
 	return ts.Ship, ts.Order, nil
 }
 
+func (u *User) JettisonCargo(shipID, good string, quantity int) error {
+	url := URLJettisonCargo(u.Username, shipID)
+
+	requestMap := map[string]interface{}{
+		"shipId":   shipID,
+		"good":     good,
+		"quantity": quantity,
+	}
+
+	return orchestrateRequest(
+		request.Clone().Put(url).Type("form").SendMap(requestMap),
+		&struct{}{},
+		func(i int) bool { return i == 200 },
+		map[int]error{404: ErrorUserNotFound},
+		cachePolicy{ false, 0 },
+	)
+}
+
 func (u *User) SubmitFlightplan(shipID, destination string) (*Flightplan, error) {
 	url := URLSubmitFlightplan(u.Username)
 	ts := struct {
