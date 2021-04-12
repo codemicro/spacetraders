@@ -8,12 +8,13 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
 	"time"
 )
+
+const MaximumTraderShips = 40
 
 type Core struct {
 	user                *stapi.User
@@ -35,22 +36,7 @@ func NewCore(user *stapi.User) *Core {
 	c.stopNotifier = make(chan string, 200)
 
 	go c.Start()
-
-	go func() {
-		for {
-			time.Sleep(time.Second * 10)
-			fcont, err := ioutil.ReadFile("killswitch.txt")
-			if err != nil {
-				c.error(err)
-			} else {
-				if len(fcont) != 0 {
-					c.TriggerStop()
-					return
-				}
-			}
-		}
-	}()
-
+	
 	go func() {
 		for {
 			err := db.DeleteMarketDataOlderThan(time.Now().Add(-10 * time.Minute))
