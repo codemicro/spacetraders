@@ -157,6 +157,20 @@ func requestWorker() {
 		for {
 			resp, body, errs := rq.request.Clone().EndBytes()
 
+			var err error
+			if errs != nil {
+				err = multierror.Append(err, errs...)
+
+				rq.responseNotifier <- &completedRequest{
+					body:     body,
+					response: resp,
+					err:      err,
+				}
+				close(rq.responseNotifier)
+				break
+
+			}
+
 			if resp.StatusCode == 429 {
 				ratelimitRetries += 1
 
@@ -194,11 +208,6 @@ func requestWorker() {
 				}
 				close(rq.responseNotifier)
 				break
-			}
-
-			var err error
-			if errs != nil {
-				err = multierror.Append(err, errs...)
 			}
 
 			rq.responseNotifier <- &completedRequest{
